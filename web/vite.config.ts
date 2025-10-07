@@ -8,16 +8,13 @@ export default defineConfig({
     lib: {
       entry: 'src/index.ts',
       name: 'CODLoadoutComponents',
-      formats: ['es', 'umd'],
-      fileName: (format) => `cod-loadout-components.${format}.js`
+      formats: ['umd'],
+      fileName: () => `cod-loadout-components.umd.js`
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: [],
       output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM'
-        }
+        globals: {}
       }
     }
   }

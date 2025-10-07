@@ -46,7 +46,7 @@ export function db() {
   return admin.firestore();
 }
 
-export function storage() {
+export function storage(): admin.storage.Storage {
   if (!initialized) {
     initializeFirebase();
   }
@@ -59,7 +59,7 @@ export function storage() {
   return admin.storage();
 }
 
-export function auth() {
+export function auth(): admin.auth.Auth {
   if (!initialized) {
     initializeFirebase();
   }

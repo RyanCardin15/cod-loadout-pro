@@ -5,7 +5,9 @@
     "rootDir": "./src",
     "composite": true,
     "noImplicitAny": false,
-    "strict": false
+    "strict": false,
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]

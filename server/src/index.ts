@@ -6,10 +6,13 @@ import {
   CallToolRequestSchema,
   ErrorCode,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { initializeFirebase } from './firebase/admin.js';
 import { toolRegistry } from './tools/registry.js';
+import { listWidgetResources, getWidgetTemplate } from './resources/templates.js';
 
 class CODLoadoutServer {
   private server: Server;
@@ -37,8 +40,10 @@ class CODLoadoutServer {
       return {
         tools: Object.values(toolRegistry).map(tool => ({
           name: tool.name,
+          title: tool.title,
           description: tool.description,
           inputSchema: tool.inputSchema,
+          annotations: tool.annotations,
         })),
       };
     });
@@ -75,6 +80,35 @@ class CODLoadoutServer {
           `Failed to execute tool: ${error instanceof Error ? error.message : String(error)}`
         );
       }
+    });
+
+    // Resource handlers
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      return {
+        resources: listWidgetResources(),
+      };
+    });
+
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const { uri } = request.params;
+      const template = getWidgetTemplate(uri);
+
+      if (!template) {
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          `Resource not found: ${uri}`
+        );
+      }
+
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'text/html+skybridge',
+            text: template,
+          },
+        ],
+      };
     });
   }
 

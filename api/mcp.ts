@@ -4,10 +4,13 @@ import {
   CallToolRequestSchema,
   ErrorCode,
   ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
 import { initializeFirebase } from '../server/src/firebase/admin.js';
 import { toolRegistry } from '../server/src/tools/registry.js';
+import { listWidgetResources, getWidgetTemplate } from '../server/src/resources/templates.js';
 
 // Initialize Firebase on module load
 initializeFirebase();
@@ -37,8 +40,10 @@ class VercelMCPHandler {
       return {
         tools: Object.values(toolRegistry).map(tool => ({
           name: tool.name,
+          title: tool.title,
           description: tool.description,
           inputSchema: tool.inputSchema,
+          annotations: tool.annotations,
         })),
       };
     });
@@ -75,6 +80,35 @@ class VercelMCPHandler {
         );
       }
     });
+
+    // Resource handlers
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      return {
+        resources: listWidgetResources(),
+      };
+    });
+
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const { uri } = request.params;
+      const template = getWidgetTemplate(uri);
+
+      if (!template) {
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          `Resource not found: ${uri}`
+        );
+      }
+
+      return {
+        contents: [
+          {
+            uri,
+            mimeType: 'text/html+skybridge',
+            text: template,
+          },
+        ],
+      };
+    });
   }
 
   async handleRequest(request: any): Promise<any> {
@@ -102,6 +136,7 @@ class VercelMCPHandler {
         result: {
           tools: Object.values(toolRegistry).map(tool => ({
             name: tool.name,
+            title: tool.title,
             description: tool.description,
             inputSchema: tool.inputSchema,
             annotations: tool.annotations || {
@@ -154,6 +189,42 @@ class VercelMCPHandler {
           }
         };
       }
+    } else if (request.method === 'resources/list') {
+      return {
+        jsonrpc: "2.0",
+        id: request.id,
+        result: {
+          resources: listWidgetResources()
+        }
+      };
+    } else if (request.method === 'resources/read') {
+      const { uri } = request.params;
+      const template = getWidgetTemplate(uri);
+
+      if (!template) {
+        return {
+          jsonrpc: "2.0",
+          id: request.id,
+          error: {
+            code: ErrorCode.InvalidRequest,
+            message: `Resource not found: ${uri}`
+          }
+        };
+      }
+
+      return {
+        jsonrpc: "2.0",
+        id: request.id,
+        result: {
+          contents: [
+            {
+              uri,
+              mimeType: 'text/html+skybridge',
+              text: template,
+            },
+          ],
+        }
+      };
     } else {
       return {
         jsonrpc: "2.0",
