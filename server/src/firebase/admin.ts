@@ -9,19 +9,27 @@ export function initializeFirebase() {
     const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
     if (!projectId || !clientEmail || !privateKey) {
-      throw new Error('Missing Firebase configuration environment variables');
+      console.warn('Firebase environment variables not configured. Tools will return mock data.');
+      initialized = true; // Mark as initialized to prevent retries
+      return;
     }
 
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    });
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      });
 
-    initialized = true;
+      initialized = true;
+      console.log('Firebase initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Firebase:', error);
+      initialized = true; // Mark as initialized to prevent retries
+    }
   }
 }
 
@@ -29,6 +37,12 @@ export function db() {
   if (!initialized) {
     initializeFirebase();
   }
+
+  // Check if Firebase is actually available
+  if (!admin.apps.length) {
+    throw new Error('Firebase not initialized - environment variables missing');
+  }
+
   return admin.firestore();
 }
 
@@ -36,6 +50,12 @@ export function storage() {
   if (!initialized) {
     initializeFirebase();
   }
+
+  // Check if Firebase is actually available
+  if (!admin.apps.length) {
+    throw new Error('Firebase not initialized - environment variables missing');
+  }
+
   return admin.storage();
 }
 
@@ -43,6 +63,12 @@ export function auth() {
   if (!initialized) {
     initializeFirebase();
   }
+
+  // Check if Firebase is actually available
+  if (!admin.apps.length) {
+    throw new Error('Firebase not initialized - environment variables missing');
+  }
+
   return admin.auth();
 }
 

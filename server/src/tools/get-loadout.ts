@@ -16,6 +16,10 @@ export const getLoadoutTool: MCPTool = {
   name: 'get_loadout',
   title: 'Build Complete Loadout',
   description: 'Get a complete loadout with attachments, perks, and equipment for a weapon',
+  annotations: {
+    readOnlyHint: true,
+    openWorldHint: true
+  },
 
   inputSchema: {
     type: 'object',

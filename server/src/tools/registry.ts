@@ -11,6 +11,10 @@ export interface MCPTool {
   title: string;
   description: string;
   inputSchema: any;
+  annotations?: {
+    readOnlyHint?: boolean;
+    openWorldHint?: boolean;
+  };
   _meta?: any;
   execute(input: unknown, context: { userId: string; sessionId: string }): Promise<any>;
 }

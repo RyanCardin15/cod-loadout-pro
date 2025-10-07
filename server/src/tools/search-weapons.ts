@@ -17,6 +17,10 @@ export const searchWeaponsTool: MCPTool = {
   name: 'search_weapons',
   title: 'Search Best Weapons',
   description: 'Find the best weapons based on criteria like game, category, situation, and playstyle',
+  annotations: {
+    readOnlyHint: true,
+    openWorldHint: true
+  },
 
   inputSchema: {
     type: 'object',

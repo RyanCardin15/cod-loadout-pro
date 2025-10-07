@@ -79,12 +79,90 @@ class VercelMCPHandler {
 
   async handleRequest(request: any): Promise<any> {
     // Handle MCP protocol requests
-    if (request.method === 'tools/list') {
-      return this.server.request(request, ListToolsRequestSchema);
+    if (request.method === 'initialize') {
+      return {
+        jsonrpc: "2.0",
+        id: request.id,
+        result: {
+          protocolVersion: "2024-11-05",
+          capabilities: {
+            tools: {},
+            resources: {}
+          },
+          serverInfo: {
+            name: "cod-loadout-pro",
+            version: "1.0.0"
+          }
+        }
+      };
+    } else if (request.method === 'tools/list') {
+      return {
+        jsonrpc: "2.0",
+        id: request.id,
+        result: {
+          tools: Object.values(toolRegistry).map(tool => ({
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema,
+            annotations: tool.annotations || {
+              readOnlyHint: true,
+              openWorldHint: true
+            }
+          })),
+        }
+      };
     } else if (request.method === 'tools/call') {
-      return this.server.request(request, CallToolRequestSchema);
+      const { name, arguments: args } = request.params;
+
+      const tool = toolRegistry[name];
+      if (!tool) {
+        return {
+          jsonrpc: "2.0",
+          id: request.id,
+          error: {
+            code: ErrorCode.MethodNotFound,
+            message: `Unknown tool: ${name}`
+          }
+        };
+      }
+
+      try {
+        const context = {
+          userId: request.meta?.userId || 'anonymous',
+          sessionId: request.meta?.sessionId || 'default',
+        };
+
+        const result = await tool.execute(args, context);
+
+        return {
+          jsonrpc: "2.0",
+          id: request.id,
+          result: {
+            content: result.content || [{ type: 'text', text: 'Operation completed successfully' }],
+            isError: false,
+            _meta: result._meta,
+          }
+        };
+      } catch (error) {
+        console.error(`Error executing tool ${name}:`, error);
+        return {
+          jsonrpc: "2.0",
+          id: request.id,
+          error: {
+            code: ErrorCode.InternalError,
+            message: `Failed to execute tool: ${error instanceof Error ? error.message : String(error)}`
+          }
+        };
+      }
     } else {
-      throw new McpError(ErrorCode.MethodNotFound, `Unknown method: ${request.method}`);
+      return {
+        jsonrpc: "2.0",
+        id: request.id,
+        error: {
+          code: ErrorCode.MethodNotFound,
+          message: `Unknown method: ${request.method}`
+        }
+      };
     }
   }
 }

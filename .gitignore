@@ -64,3 +64,10 @@ temp/
 # Test files
 test-*.js
 *.test.js
+
+# Firebase service account keys
+firebase-admin-key.json
+**/firebase-admin-key.json
+
+# Environment setup files
+VERCEL_ENV_SETUP.md
