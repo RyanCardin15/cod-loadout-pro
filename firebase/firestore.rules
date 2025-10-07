@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to weapons and attachments for all users
+    match /weapons/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    match /attachments/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    // Allow read access to public loadouts
+    match /loadouts/{loadoutId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null &&
+        (request.auth.uid == resource.data.userId || request.auth.uid == "admin");
+    }
+
+    // User profiles - private to each user
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Meta snapshots - public read
+    match /meta_snapshots/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    // Counter strategies - public read
+    match /counters/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    // Sessions - private to session owner
+    match /sessions/{sessionId} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid == resource.data.userId;
+    }
+
+    // Perks and equipment - public read
+    match /perks/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    match /equipment/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+  }
+}

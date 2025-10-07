@@ -1,0 +1,31 @@
+{
+  "name": "cod-loadout-pro",
+  "version": "1.0.0",
+  "description": "COD Loadout Assistant MCP Server for ChatGPT Apps",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:web": "cd web && npm run dev",
+    "build": "npm run build:server && npm run build:web",
+    "build:server": "cd server && npm run build",
+    "build:web": "cd web && npm run build",
+    "deploy": "vercel --prod",
+    "seed": "tsx scripts/seed-database.ts",
+    "update-meta": "tsx scripts/scrape-meta.ts"
+  },
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "concurrently": "^8.2.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vercel": "^33.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

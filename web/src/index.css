@@ -1,0 +1,91 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  * {
+    @apply antialiased;
+  }
+
+  body {
+    @apply font-sans bg-gray-900 text-white;
+  }
+}
+
+@layer components {
+  .loadout-card {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+    box-shadow: 0 20px 40px rgba(255, 107, 0, 0.1);
+  }
+
+  .meta-tier-list {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+    box-shadow: 0 20px 40px rgba(255, 107, 0, 0.1);
+  }
+
+  .counter-suggestions {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+    box-shadow: 0 20px 40px rgba(255, 107, 0, 0.1);
+  }
+
+  .my-loadouts {
+    background: linear-gradient(135deg, #0A0A0A 0%, #1A1A1A 100%);
+    box-shadow: 0 20px 40px rgba(255, 107, 0, 0.1);
+  }
+
+  .weapon-stats {
+    border: 1px solid rgba(255, 107, 0, 0.2);
+  }
+
+  .attachment-list {
+    border: 1px solid rgba(0, 212, 255, 0.2);
+  }
+}
+
+@layer utilities {
+  .text-cod-orange {
+    color: #FF6B00;
+  }
+
+  .text-cod-green {
+    color: #00FF41;
+  }
+
+  .text-cod-blue {
+    color: #00D4FF;
+  }
+
+  .bg-cod-orange {
+    background-color: #FF6B00;
+  }
+
+  .bg-cod-black {
+    background-color: #0A0A0A;
+  }
+
+  .bg-cod-gray {
+    background-color: #1A1A1A;
+  }
+
+  .border-cod-orange {
+    border-color: #FF6B00;
+  }
+
+  .font-cod {
+    font-family: 'Rajdhani', Arial, sans-serif;
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.3);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+
+  .glow-green {
+    box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+  }
+}

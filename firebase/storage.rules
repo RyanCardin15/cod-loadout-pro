@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Public read access for weapon and attachment images
+    match /weapons/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    match /attachments/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    match /perks/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    match /equipment/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == "admin";
+    }
+
+    // User uploaded content
+    match /user-content/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
