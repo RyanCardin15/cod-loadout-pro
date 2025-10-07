@@ -37,8 +37,8 @@ function FloatingOrb() {
 // Particle Component
 function Particle({ index }: { index: number }) {
   const [position] = useState(() => ({
-    x: Math.random() * window.innerWidth,
-    y: Math.random() * window.innerHeight,
+    x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1920),
+    y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1080),
   }));
 
   return (
@@ -71,6 +71,8 @@ export function HeroEnhanced() {
   const opacity = useTransform(scrollY, [0, 200], [1, 0]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const handleMouseMove = (e: MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
