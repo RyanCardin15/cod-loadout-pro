@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "cod-loadout-pro",
   "builds": [
     {
       "src": "api/mcp.ts",
@@ -17,11 +16,5 @@
       "src": "/(.*)",
       "dest": "/api/mcp.ts"
     }
-  ],
-  "functions": {
-    "api/mcp.ts": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  }
+  ]
 }
