@@ -5,6 +5,10 @@ export const myLoadoutsTool: MCPTool = {
   name: 'my_loadouts',
   title: 'My Saved Loadouts',
   description: 'View all your saved loadouts',
+  annotations: {
+    readOnlyHint: true,
+    openWorldHint: false
+  },
 
   inputSchema: {
     type: 'object',
@@ -12,6 +16,9 @@ export const myLoadoutsTool: MCPTool = {
   },
 
   _meta: {
+    securitySchemes: [
+      { type: 'noauth' }
+    ],
     'openai/outputTemplate': 'ui://widget/my-loadouts.html',
     'openai/toolInvocation/invoking': 'Loading your loadouts...',
     'openai/toolInvocation/invoked': 'Loadouts loaded',

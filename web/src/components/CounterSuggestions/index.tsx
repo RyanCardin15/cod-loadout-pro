@@ -4,6 +4,7 @@ import { useOpenAI } from '../../bridge/hooks';
 export const CounterSuggestions: React.FC = () => {
   const { toolOutput, callTool, theme } = useOpenAI();
   const [counterData, setCounterData] = useState<any>(null);
+  const isDarkTheme = theme === 'dark' || theme === 'high_contrast';
 
   useEffect(() => {
     if (toolOutput?.structuredContent) {
@@ -36,7 +37,7 @@ export const CounterSuggestions: React.FC = () => {
   );
 
   return (
-    <div className={`counter-suggestions bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${theme === 'dark' ? 'border-cod-orange' : 'border-gray-300'} border`}>
+    <div className={`counter-suggestions bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${isDarkTheme ? 'border-cod-orange' : 'border-gray-300'} border`}>
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-cod font-bold text-cod-orange mb-2">

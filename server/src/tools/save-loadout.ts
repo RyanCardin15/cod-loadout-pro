@@ -19,6 +19,11 @@ export const saveLoadoutTool: MCPTool = {
   name: 'save_loadout',
   title: 'Save Loadout',
   description: 'Save a loadout to your favorites',
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false
+  },
 
   inputSchema: {
     type: 'object',
@@ -42,6 +47,9 @@ export const saveLoadoutTool: MCPTool = {
   },
 
   _meta: {
+    securitySchemes: [
+      { type: 'noauth' }
+    ],
     'openai/toolInvocation/invoking': 'Saving loadout...',
     'openai/toolInvocation/invoked': 'Loadout saved!'
   },

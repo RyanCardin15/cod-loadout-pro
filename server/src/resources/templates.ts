@@ -2,6 +2,20 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 // Read the built component bundle
+interface WidgetTemplate {
+  html: string;
+  description: string;
+  meta: {
+    'openai/widgetDescription': string;
+    'openai/widgetPrefersBorder'?: boolean;
+    'openai/widgetCSP': {
+      connect_domains: string[];
+      resource_domains: string[];
+    };
+    'openai/widgetDomain': string;
+  };
+}
+
 let componentJS = '';
 try {
   // In development, read from dist; in production, bundle will be embedded
@@ -12,7 +26,13 @@ try {
 }
 
 // Base HTML template for widgets
-const createWidgetTemplate = (componentName: string, rootId: string) => `
+const createWidgetTemplate = (
+  componentName: string,
+  rootId: string,
+  description: string,
+  options: { prefersBorder?: boolean } = {}
+): WidgetTemplate => {
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,25 +164,71 @@ const createWidgetTemplate = (componentName: string, rootId: string) => `
 </html>
 `.trim();
 
-// Widget templates
-export const WIDGET_TEMPLATES = {
-  'ui://widget/loadout-card.html': createWidgetTemplate('LoadoutCard', 'loadout-root'),
-  'ui://widget/meta-tier-list.html': createWidgetTemplate('MetaTierList', 'meta-root'),
-  'ui://widget/counter-suggestions.html': createWidgetTemplate('CounterSuggestions', 'counter-root'),
-  'ui://widget/my-loadouts.html': createWidgetTemplate('MyLoadouts', 'loadouts-root'),
-  'ui://widget/playstyle-profile.html': createWidgetTemplate('PlaystyleProfile', 'playstyle-root'),
-  'ui://widget/weapon-list.html': createWidgetTemplate('WeaponList', 'weapons-root'),
+  return {
+    html,
+    description,
+    meta: {
+      'openai/widgetDescription': description,
+      'openai/widgetDomain': 'https://chatgpt.com',
+      'openai/widgetCSP': {
+        connect_domains: [],
+        resource_domains: [],
+      },
+      ...(options.prefersBorder ? { 'openai/widgetPrefersBorder': true } : {}),
+    },
+  };
 };
 
-export function getWidgetTemplate(uri: string): string | null {
+// Widget templates
+export const WIDGET_TEMPLATES = {
+  'ui://widget/loadout-card.html': createWidgetTemplate(
+    'LoadoutCard',
+    'loadout-root',
+    'Displays the full loadout recommendation with attachments, perks, and stats.',
+    { prefersBorder: true }
+  ),
+  'ui://widget/meta-tier-list.html': createWidgetTemplate(
+    'MetaTierList',
+    'meta-root',
+    'Shows the current meta tier list with win rates, pick rates, and quick comparisons.',
+    { prefersBorder: true }
+  ),
+  'ui://widget/counter-suggestions.html': createWidgetTemplate(
+    'CounterSuggestions',
+    'counter-root',
+    'Provides counters and strategy tips against the opposing loadout.',
+    { prefersBorder: true }
+  ),
+  'ui://widget/my-loadouts.html': createWidgetTemplate(
+    'MyLoadouts',
+    'loadouts-root',
+    'Lists saved and favorite loadouts so players can quickly reuse their builds.',
+    { prefersBorder: true }
+  ),
+  'ui://widget/playstyle-profile.html': createWidgetTemplate(
+    'PlaystyleProfile',
+    'playstyle-root',
+    'Summarizes the detected playstyle and recommended adjustments.',
+    { prefersBorder: true }
+  ),
+  'ui://widget/weapon-list.html': createWidgetTemplate(
+    'WeaponList',
+    'weapons-root',
+    'Highlights the top weapon recommendations with key stats for comparison.',
+    { prefersBorder: true }
+  ),
+} as Record<string, WidgetTemplate>;
+
+export function getWidgetTemplate(uri: string): WidgetTemplate | null {
   return WIDGET_TEMPLATES[uri] || null;
 }
 
 export function listWidgetResources() {
-  return Object.keys(WIDGET_TEMPLATES).map(uri => ({
+  return Object.entries(WIDGET_TEMPLATES).map(([uri, template]) => ({
     uri,
     name: uri.split('/').pop()?.replace('.html', '') || uri,
-    description: `UI component for ${uri.split('/').pop()?.replace('.html', '').replace(/-/g, ' ')}`,
+    description: template.description,
     mimeType: 'text/html+skybridge',
+    _meta: template.meta,
   }));
 }

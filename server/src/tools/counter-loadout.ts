@@ -16,6 +16,10 @@ export const counterLoadoutTool: MCPTool = {
   name: 'counter_loadout',
   title: 'Counter Enemy Loadout',
   description: 'Get the best counters and strategies against an enemy weapon or loadout',
+  annotations: {
+    readOnlyHint: true,
+    openWorldHint: true
+  },
 
   inputSchema: {
     type: 'object',
@@ -50,6 +54,9 @@ export const counterLoadoutTool: MCPTool = {
   },
 
   _meta: {
+    securitySchemes: [
+      { type: 'noauth' }
+    ],
     'openai/outputTemplate': 'ui://widget/counter-suggestions.html',
     'openai/toolInvocation/invoking': 'Analyzing enemy loadout...',
     'openai/toolInvocation/invoked': 'Counter strategies ready',

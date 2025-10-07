@@ -4,10 +4,14 @@ import { useOpenAI } from '../../bridge/hooks';
 export const MyLoadouts: React.FC = () => {
   const { toolOutput, callTool, theme } = useOpenAI();
   const [loadouts, setLoadouts] = useState<any[]>([]);
+  const isDarkTheme = theme === 'dark' || theme === 'high_contrast';
 
   useEffect(() => {
-    if (toolOutput?.structuredContent?.loadouts) {
-      setLoadouts(toolOutput.structuredContent.loadouts);
+    const content = toolOutput?.structuredContent as { loadouts?: any[] } | undefined;
+    if (Array.isArray(content?.loadouts)) {
+      setLoadouts(content.loadouts);
+    } else if (content) {
+      setLoadouts([]);
     }
   }, [toolOutput]);
 
@@ -41,7 +45,7 @@ export const MyLoadouts: React.FC = () => {
 
   if (loadouts.length === 0) {
     return (
-      <div className={`my-loadouts bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${theme === 'dark' ? 'border-cod-orange' : 'border-gray-300'} border`}>
+      <div className={`my-loadouts bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${isDarkTheme ? 'border-cod-orange' : 'border-gray-300'} border`}>
         <h2 className="text-2xl font-cod font-bold text-cod-orange mb-6">My Saved Loadouts</h2>
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📦</div>
@@ -55,7 +59,7 @@ export const MyLoadouts: React.FC = () => {
   }
 
   return (
-    <div className={`my-loadouts bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${theme === 'dark' ? 'border-cod-orange' : 'border-gray-300'} border`}>
+    <div className={`my-loadouts bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${isDarkTheme ? 'border-cod-orange' : 'border-gray-300'} border`}>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-cod font-bold text-cod-orange">My Saved Loadouts</h2>

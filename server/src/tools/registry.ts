@@ -14,6 +14,8 @@ export interface MCPTool {
   annotations?: {
     readOnlyHint?: boolean;
     openWorldHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
   };
   _meta?: any;
   execute(input: unknown, context: { userId: string; sessionId: string }): Promise<any>;

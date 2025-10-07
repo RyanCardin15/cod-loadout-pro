@@ -69,11 +69,20 @@ class CODLoadoutServer {
 
         const result = await tool.execute(args, context);
 
-        return {
+        const response: Record<string, unknown> = {
           content: result.content || [{ type: 'text', text: 'Operation completed successfully' }],
-          isError: false,
-          _meta: result._meta,
+          isError: result.isError ?? false,
         };
+
+        if (typeof result.structuredContent !== 'undefined') {
+          response.structuredContent = result.structuredContent;
+        }
+
+        if (typeof result._meta !== 'undefined') {
+          response._meta = result._meta;
+        }
+
+        return response;
       } catch (error) {
         console.error(`Error executing tool ${name}:`, error);
         throw new McpError(
@@ -106,7 +115,8 @@ class CODLoadoutServer {
           {
             uri,
             mimeType: 'text/html+skybridge',
-            text: template,
+            text: template.html,
+            _meta: template.meta,
           },
         ],
       };

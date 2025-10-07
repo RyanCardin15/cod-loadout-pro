@@ -1,13 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useOpenAI } from '../../bridge/hooks';
 
+interface MetaStructuredContent {
+  tiers: Record<string, any[]>;
+  recentChanges?: string[];
+  lastUpdated?: string;
+}
+
 export const MetaTierList: React.FC = () => {
   const { toolOutput, callTool, theme } = useOpenAI();
-  const [tiers, setTiers] = useState<any>(null);
+  const [metaContent, setMetaContent] = useState<MetaStructuredContent | null>(null);
+  const isDarkTheme = theme === 'dark' || theme === 'high_contrast';
 
   useEffect(() => {
-    if (toolOutput?.structuredContent?.tiers) {
-      setTiers(toolOutput.structuredContent.tiers);
+    const content = toolOutput?.structuredContent as Partial<MetaStructuredContent> | undefined;
+
+    if (content?.tiers) {
+      setMetaContent({
+        tiers: content.tiers,
+        recentChanges: Array.isArray(content.recentChanges) ? content.recentChanges : [],
+        lastUpdated: typeof content.lastUpdated === 'string' ? content.lastUpdated : undefined,
+      });
     }
   }, [toolOutput]);
 
@@ -31,19 +44,21 @@ export const MetaTierList: React.FC = () => {
     D: 'text-blue-400'
   };
 
-  if (!tiers) return (
+  if (!metaContent) return (
     <div className="flex items-center justify-center p-8">
       <div className="text-gray-500">Loading meta...</div>
     </div>
   );
 
+  const { tiers, recentChanges = [], lastUpdated } = metaContent;
+
   return (
-    <div className={`meta-tier-list bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${theme === 'dark' ? 'border-cod-orange' : 'border-gray-300'} border`}>
+    <div className={`meta-tier-list bg-gradient-to-br from-cod-black to-cod-gray text-white rounded-lg p-6 max-w-4xl mx-auto ${isDarkTheme ? 'border-cod-orange' : 'border-gray-300'} border`}>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-cod font-bold text-cod-orange">Current Meta Tier List</h2>
         <span className="text-cod-blue text-sm">
-          Updated: {toolOutput.structuredContent.lastUpdated ? new Date(toolOutput.structuredContent.lastUpdated).toLocaleDateString() : 'Recently'}
+          Updated: {lastUpdated ? new Date(lastUpdated).toLocaleDateString() : 'Recently'}
         </span>
       </div>
 
@@ -80,11 +95,11 @@ export const MetaTierList: React.FC = () => {
       ))}
 
       {/* Recent Changes */}
-      {toolOutput.structuredContent.recentChanges?.length > 0 && (
+      {recentChanges.length > 0 && (
         <div className="mt-8 pt-6 border-t border-cod-gray">
           <h3 className="text-lg font-semibold text-cod-blue mb-3">Recent Changes</h3>
           <ul className="space-y-2">
-            {toolOutput.structuredContent.recentChanges.map((change: string, i: number) => (
+            {recentChanges.map((change: string, i: number) => (
               <li key={i} className="text-gray-300 text-sm flex items-start gap-2">
                 <span className="text-cod-green mt-1">•</span>
                 {change}

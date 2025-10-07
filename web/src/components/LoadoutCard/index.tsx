@@ -4,6 +4,7 @@ import { useOpenAI } from '../../bridge/hooks';
 export const LoadoutCard: React.FC = () => {
   const { toolOutput, callTool, theme } = useOpenAI();
   const [loadout, setLoadout] = useState<any>(null);
+  const isDarkTheme = theme === 'dark' || theme === 'high_contrast';
 
   useEffect(() => {
     if (toolOutput?.structuredContent?.loadout) {
@@ -12,7 +13,7 @@ export const LoadoutCard: React.FC = () => {
   }, [toolOutput]);
 
   const handleSaveLoadout = async () => {
-    const loadoutId = toolOutput._meta?.loadoutId;
+    const loadoutId = toolOutput?._meta?.loadoutId;
     await callTool('save_loadout', { loadoutId });
   };
 
@@ -23,7 +24,7 @@ export const LoadoutCard: React.FC = () => {
   );
 
   return (
-    <div className={`bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-lg p-6 max-w-2xl mx-auto border ${theme === 'dark' ? 'border-orange-500' : 'border-gray-300'}`}>
+    <div className={`bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-lg p-6 max-w-2xl mx-auto border ${isDarkTheme ? 'border-orange-500' : 'border-gray-300'}`}>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-orange-500">{loadout.name}</h2>
         <button

@@ -50,6 +50,9 @@ export const getLoadoutTool: MCPTool = {
   },
 
   _meta: {
+    securitySchemes: [
+      { type: 'noauth' }
+    ],
     'openai/outputTemplate': 'ui://widget/loadout-card.html',
     'openai/toolInvocation/invoking': 'Building your loadout...',
     'openai/toolInvocation/invoked': 'Loadout ready!',

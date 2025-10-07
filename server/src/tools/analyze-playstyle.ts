@@ -16,6 +16,12 @@ export const analyzePlaystyleTool: MCPTool = {
   name: 'analyze_playstyle',
   title: 'Analyze Playstyle',
   description: 'Analyze your playstyle to get personalized weapon and loadout recommendations',
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: false
+  },
 
   inputSchema: {
     type: 'object',
@@ -53,6 +59,9 @@ export const analyzePlaystyleTool: MCPTool = {
   },
 
   _meta: {
+    securitySchemes: [
+      { type: 'noauth' }
+    ],
     'openai/outputTemplate': 'ui://widget/playstyle-profile.html',
     'openai/toolInvocation/invoking': 'Analyzing your playstyle...',
     'openai/toolInvocation/invoked': 'Profile created',

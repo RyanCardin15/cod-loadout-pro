@@ -12,6 +12,10 @@ export const getMetaTool: MCPTool = {
   name: 'get_meta',
   title: 'Current Meta',
   description: 'Get the current meta weapons, loadouts, and tier lists',
+  annotations: {
+    readOnlyHint: true,
+    openWorldHint: true
+  },
 
   inputSchema: {
     type: 'object',
@@ -34,6 +38,9 @@ export const getMetaTool: MCPTool = {
   },
 
   _meta: {
+    securitySchemes: [
+      { type: 'noauth' }
+    ],
     'openai/outputTemplate': 'ui://widget/meta-tier-list.html',
     'openai/toolInvocation/invoking': 'Loading current meta...',
     'openai/toolInvocation/invoked': 'Meta loaded',

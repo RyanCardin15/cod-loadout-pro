@@ -65,6 +65,9 @@ export const searchWeaponsTool: MCPTool = {
   },
 
   _meta: {
+    securitySchemes: [
+      { type: 'noauth' }
+    ],
     'openai/outputTemplate': 'ui://widget/weapon-list.html',
     'openai/toolInvocation/invoking': 'Finding best weapons...',
     'openai/toolInvocation/invoked': 'Found the top weapons',

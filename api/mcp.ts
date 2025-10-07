@@ -68,11 +68,20 @@ class VercelMCPHandler {
 
         const result = await tool.execute(args, context);
 
-        return {
+        const response: Record<string, unknown> = {
           content: result.content || [{ type: 'text', text: 'Operation completed successfully' }],
-          isError: false,
-          _meta: result._meta,
+          isError: result.isError ?? false,
         };
+
+        if (typeof result.structuredContent !== 'undefined') {
+          response.structuredContent = result.structuredContent;
+        }
+
+        if (typeof result._meta !== 'undefined') {
+          response._meta = result._meta;
+        }
+
+        return response;
       } catch (error) {
         console.error(`Error executing tool ${name}:`, error);
         throw new McpError(
@@ -105,7 +114,8 @@ class VercelMCPHandler {
           {
             uri,
             mimeType: 'text/html+skybridge',
-            text: template,
+            text: template.html,
+            _meta: template.meta,
           },
         ],
       };
@@ -171,14 +181,23 @@ class VercelMCPHandler {
 
         const result = await tool.execute(args, context);
 
+        const callResult: Record<string, unknown> = {
+          content: result.content || [{ type: 'text', text: 'Operation completed successfully' }],
+          isError: result.isError ?? false,
+        };
+
+        if (typeof result.structuredContent !== 'undefined') {
+          callResult.structuredContent = result.structuredContent;
+        }
+
+        if (typeof result._meta !== 'undefined') {
+          callResult._meta = result._meta;
+        }
+
         return {
           jsonrpc: "2.0",
           id: request.id,
-          result: {
-            content: result.content || [{ type: 'text', text: 'Operation completed successfully' }],
-            isError: false,
-            _meta: result._meta,
-          }
+          result: callResult
         };
       } catch (error) {
         console.error(`Error executing tool ${name}:`, error);
@@ -222,7 +241,8 @@ class VercelMCPHandler {
             {
               uri,
               mimeType: 'text/html+skybridge',
-              text: template,
+              text: template.html,
+              _meta: template.meta,
             },
           ],
         }
@@ -267,7 +287,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'POST') {
     try {
-      const result = await mcpHandler.handleRequest(req.body);
+      const rawBody = req.body;
+      const body = typeof rawBody === 'string' && rawBody.length > 0
+        ? JSON.parse(rawBody)
+        : (rawBody ?? {});
+
+      const result = await mcpHandler.handleRequest(body);
       return res.status(200).json(result);
     } catch (error) {
       console.error('MCP Handler Error:', error);
