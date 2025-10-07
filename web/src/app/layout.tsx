@@ -26,25 +26,25 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | COD Loadout Pro',
-    default: 'COD Loadout Pro - Master Your Loadouts',
+    template: '%s | Counterplay',
+    default: 'Counterplay - Master Your Loadouts',
   },
   description: 'Get expert Call of Duty weapon loadouts, counters, and meta analysis. Build the perfect loadout with real-time stats and personalized recommendations.',
   keywords: ['call of duty', 'COD', 'loadout', 'weapons', 'meta', 'MW3', 'Warzone', 'BO6', 'gaming'],
-  authors: [{ name: 'COD Loadout Pro' }],
-  creator: 'COD Loadout Pro',
-  publisher: 'COD Loadout Pro',
+  authors: [{ name: 'Counterplay' }],
+  creator: 'Counterplay',
+  publisher: 'Counterplay',
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://codloadout.pro',
-    title: 'COD Loadout Pro - Master Your Loadouts',
+    url: 'https://counterplay.gg',
+    title: 'Counterplay - Master Your Loadouts',
     description: 'Expert Call of Duty weapon loadouts, counters, and meta analysis.',
-    siteName: 'COD Loadout Pro',
+    siteName: 'Counterplay',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'COD Loadout Pro',
+    title: 'Counterplay',
     description: 'Expert Call of Duty weapon loadouts and meta analysis',
   },
   robots: {
@@ -82,7 +82,7 @@ export default function RootLayout({
             </main>
             <footer className="border-t border-cod-surface bg-cod-gray/50 backdrop-blur-md">
               <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-400">
-                <p>© 2025 COD Loadout Pro. Not affiliated with Activision or Call of Duty.</p>
+                <p>© 2025 Counterplay. Not affiliated with Activision or Call of Duty.</p>
               </div>
             </footer>
           </div>

@@ -44,7 +44,7 @@ export function Navigation() {
                 <div className="absolute inset-0 bg-cod-orange/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <span className="text-xl font-display font-bold gradient-text">
-                COD Loadout Pro
+                Counterplay
               </span>
             </Link>
 
@@ -102,7 +102,7 @@ export function Navigation() {
             <Link href="/" className="flex items-center space-x-2">
               <Crosshair className="h-6 w-6 text-cod-orange" />
               <span className="text-lg font-display font-bold gradient-text">
-                COD Loadout
+                Counterplay
               </span>
             </Link>
 

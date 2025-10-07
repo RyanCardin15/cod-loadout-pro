@@ -21,7 +21,7 @@ class VercelMCPHandler {
   constructor() {
     this.server = new Server(
       {
-        name: 'cod-loadout-pro',
+        name: 'counterplay',
         version: '1.0.0',
       },
       {
@@ -135,7 +135,7 @@ class VercelMCPHandler {
             resources: {}
           },
           serverInfo: {
-            name: "cod-loadout-pro",
+            name: "counterplay",
             version: "1.0.0"
           }
         }
@@ -275,9 +275,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     // Health check / server info
     return res.status(200).json({
-      name: 'cod-loadout-pro',
+      name: 'counterplay',
       version: '1.0.0',
-      description: 'COD Loadout Assistant MCP Server',
+      description: 'Counterplay MCP Server',
       capabilities: {
         tools: {},
         resources: {},

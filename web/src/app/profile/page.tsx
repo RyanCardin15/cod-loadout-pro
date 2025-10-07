@@ -34,7 +34,7 @@ export default function ProfilePage() {
                   <div className="text-xs text-yellow-100/80 space-y-2">
                     <p>The security rules may need time to propagate (1-2 minutes).</p>
                     <p className="font-mono bg-black/30 p-2 rounded">
-                      Rules deployed to: cod-loadout-pro
+                      Rules deployed to: counterplay
                     </p>
                     <p>Check browser console (F12) for detailed error logs.</p>
                   </div>
@@ -50,7 +50,7 @@ export default function ProfilePage() {
                 Retry
               </button>
               <button
-                onClick={() => window.open('https://console.firebase.google.com/project/cod-loadout-pro/firestore', '_blank')}
+                onClick={() => window.open('https://console.firebase.google.com/project/counterplay/firestore', '_blank')}
                 className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold transition-colors"
               >
                 Check Firebase Console

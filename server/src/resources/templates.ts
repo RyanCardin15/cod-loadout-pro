@@ -19,7 +19,7 @@ interface WidgetTemplate {
 let componentJS = '';
 try {
   // In development, read from dist; in production, bundle will be embedded
-  componentJS = readFileSync(join(process.cwd(), 'web/dist/cod-loadout-components.umd.js'), 'utf-8');
+  componentJS = readFileSync(join(process.cwd(), 'web/dist/counterplay-components.umd.js'), 'utf-8');
 } catch (error) {
   console.error('Warning: Component bundle not found. Run `npm run build:web` first.');
   componentJS = '// Component bundle not built yet\nconsole.error("Components not loaded");';

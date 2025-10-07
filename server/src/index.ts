@@ -14,13 +14,13 @@ import { initializeFirebase } from './firebase/admin.js';
 import { toolRegistry } from './tools/registry.js';
 import { listWidgetResources, getWidgetTemplate } from './resources/templates.js';
 
-class CODLoadoutServer {
+class CounterplayServer {
   private server: Server;
 
   constructor() {
     this.server = new Server(
       {
-        name: 'cod-loadout-pro',
+        name: 'counterplay',
         version: '1.0.0',
       },
       {
@@ -142,11 +142,11 @@ class CODLoadoutServer {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
 
-    console.error('COD Loadout Pro MCP server running on stdio');
+    console.error('Counterplay MCP server running on stdio');
   }
 }
 
-const server = new CODLoadoutServer();
+const server = new CounterplayServer();
 server.run().catch((error) => {
   console.error('Failed to start server:', error);
   process.exit(1);

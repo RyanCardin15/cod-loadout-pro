@@ -31,7 +31,7 @@ export function CTA() {
           </h2>
 
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Join thousands of players using COD Loadout Pro to build better loadouts,
+            Join thousands of players using Counterplay to build better loadouts,
             counter enemies, and climb the ranks.
           </p>
 

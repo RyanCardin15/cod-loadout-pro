@@ -1,7 +1,7 @@
 {
-  "name": "cod-loadout-server",
+  "name": "counterplay-server",
   "version": "1.0.0",
-  "description": "MCP Server for COD Loadout Assistant",
+  "description": "MCP Server for Counterplay",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

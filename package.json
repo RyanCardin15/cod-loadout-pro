@@ -1,7 +1,7 @@
 {
-  "name": "cod-loadout-pro",
+  "name": "counterplay",
   "version": "1.0.0",
-  "description": "COD Loadout Assistant MCP Server for ChatGPT Apps",
+  "description": "Counterplay - Expert Call of Duty weapon loadouts, counters, and meta analysis",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\"",
