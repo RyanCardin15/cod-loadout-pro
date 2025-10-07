@@ -61,6 +61,10 @@ firebase-debug.log
 tmp/
 temp/
 
+# Data cache
+.cache/
+*.cache.json
+
 # Test files
 test-*.js
 *.test.js

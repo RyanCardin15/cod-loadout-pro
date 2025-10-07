@@ -1,9 +1,10 @@
 #!/usr/bin/env tsx
 
-import { initializeFirebase, db } from '../server/src/firebase/admin.js';
+import { initializeFirebase, db } from '../server/src/firebase/admin';
 
 interface MetaUpdate {
   weaponId: string;
+  weaponName: string;
   tier: 'S' | 'A' | 'B' | 'C' | 'D';
   popularity: number;
   winRate: number;
@@ -11,45 +12,43 @@ interface MetaUpdate {
 }
 
 /**
- * Mock meta scraping function
- * In a real implementation, this would scrape data from:
- * - WZRanked.com
- * - TrueGameData.com
- * - ProSettings.net
- * - Reddit r/CODWarzone
+ * Scrape meta data from various sources
+ * Data sources:
+ * - WZRanked.com - Tier lists and pick rates
+ * - CODMunity.gg - Creator loadouts
+ * - Community feedback - Reddit/Twitter
+ *
+ * NOTE: This is currently using mock data
+ * TODO: Implement actual web scraping using Puppeteer/Cheerio
  */
 async function scrapeMetaData(): Promise<MetaUpdate[]> {
   console.log('🕷️ Scraping meta data from various sources...');
+  console.log('   📍 Source 1: WZRanked.com (mock)');
+  console.log('   📍 Source 2: CODMunity.gg (mock)');
 
-  // Simulate API calls to meta tracking websites
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  // Fetch real weapons from Firestore to update
+  const weaponsSnapshot = await db().collection('weapons').limit(10).get();
 
-  // Mock data - in reality this would come from web scraping
-  const metaUpdates: MetaUpdate[] = [
-    {
-      weaponId: 'ram7-id',
-      tier: 'S',
-      popularity: 89,
-      winRate: 55,
-      changes: ['Increased popularity by 2%', 'Win rate improved']
-    },
-    {
-      weaponId: 'jackal-id',
-      tier: 'S',
-      popularity: 93,
-      winRate: 57,
-      changes: ['Remains dominant in close range', 'Usage increased']
-    },
-    {
-      weaponId: 'mcw-id',
-      tier: 'A',
-      popularity: 70,
-      winRate: 51,
-      changes: ['Slight decrease in usage', 'Still viable option']
-    }
-  ];
+  const metaUpdates: MetaUpdate[] = [];
 
-  console.log(`✅ Scraped meta data for ${metaUpdates.length} weapons`);
+  weaponsSnapshot.forEach((doc) => {
+    const weapon = doc.data();
+
+    // Simulate scraped meta data
+    // TODO: Replace with actual scraped data
+    metaUpdates.push({
+      weaponId: doc.id,
+      weaponName: weapon.name,
+      tier: weapon.meta?.tier || 'B',
+      popularity: Math.floor(Math.random() * 50) + 50,
+      winRate: Math.floor(Math.random() * 15) + 45,
+      changes: [`Updated meta data for ${weapon.name}`],
+    });
+  });
+
+  console.log(`✅ Generated meta updates for ${metaUpdates.length} weapons`);
+  console.log('   💡 Tip: Implement real scraping to get accurate data');
+
   return metaUpdates;
 }
 
