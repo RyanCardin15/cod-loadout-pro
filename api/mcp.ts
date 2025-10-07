@@ -44,6 +44,7 @@ class VercelMCPHandler {
           description: tool.description,
           inputSchema: tool.inputSchema,
           annotations: tool.annotations,
+          _meta: tool._meta,
         })),
       };
     });
@@ -142,7 +143,8 @@ class VercelMCPHandler {
             annotations: tool.annotations || {
               readOnlyHint: true,
               openWorldHint: true
-            }
+            },
+            _meta: tool._meta
           })),
         }
       };

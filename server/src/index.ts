@@ -44,6 +44,7 @@ class CODLoadoutServer {
           description: tool.description,
           inputSchema: tool.inputSchema,
           annotations: tool.annotations,
+          _meta: tool._meta,
         })),
       };
     });
