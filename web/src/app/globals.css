@@ -41,26 +41,44 @@
 }
 
 @layer components {
-  /* Glassmorphism effect */
+  /* Enhanced Glassmorphism effects */
   .glass {
     @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
   }
 
   .glass-hover {
     @apply hover:bg-white/10 transition-all duration-300;
   }
 
-  /* Neon glow effect */
+  .glass-premium {
+    @apply bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl;
+  }
+
+  /* Enhanced Neon glow effects */
   .neon-glow {
-    box-shadow: 0 0 20px rgba(255, 107, 0, 0.5), 0 0 40px rgba(255, 107, 0, 0.3);
+    box-shadow: 0 0 20px rgba(255, 107, 0, 0.5), 0 0 40px rgba(255, 107, 0, 0.3), 0 0 60px rgba(255, 107, 0, 0.1);
+  }
+
+  .neon-glow-intense {
+    box-shadow: 0 0 30px rgba(255, 107, 0, 0.7), 0 0 60px rgba(255, 107, 0, 0.5), 0 0 90px rgba(255, 107, 0, 0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
   }
 
   .neon-glow-blue {
-    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3), 0 0 60px rgba(0, 212, 255, 0.1);
   }
 
   .neon-glow-green {
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.3), 0 0 60px rgba(0, 255, 136, 0.1);
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 30px rgba(255, 107, 0, 0.7), 0 0 60px rgba(255, 107, 0, 0.5); }
+    50% { box-shadow: 0 0 40px rgba(255, 107, 0, 0.9), 0 0 80px rgba(255, 107, 0, 0.7); }
   }
 
   /* Tactical HUD elements */
@@ -174,6 +192,135 @@
       transparent 1px,
       transparent 2px
     );
+  }
+
+  /* Animated gradient backgrounds */
+  .gradient-animate {
+    background: linear-gradient(
+      -45deg,
+      theme('colors.cod.orange'),
+      theme('colors.cod.blue'),
+      theme('colors.cod.green'),
+      theme('colors.cod.orange')
+    );
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Shimmer effect */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* Glow on hover */
+  .glow-on-hover {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glow-on-hover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(
+      45deg,
+      theme('colors.cod.orange'),
+      theme('colors.cod.blue'),
+      theme('colors.cod.green')
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .glow-on-hover:hover::before {
+    opacity: 1;
+    animation: border-flow 3s linear infinite;
+  }
+
+  @keyframes border-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Floating animation */
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  @keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-gradient-to-r from-cod-surface via-cod-gray to-cod-surface bg-[length:200%_100%] animate-skeleton;
+  }
+
+  @keyframes skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Ripple effect */
+  .ripple {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    animation: ripple 0.6s linear;
+  }
+
+  @keyframes ripple {
+    to {
+      width: 100px;
+      height: 100px;
+      opacity: 0;
+    }
   }
 }
 

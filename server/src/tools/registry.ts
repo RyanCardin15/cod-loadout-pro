@@ -5,6 +5,9 @@ import { analyzePlaystyleTool } from './analyze-playstyle.js';
 import { getMetaTool } from './get-meta.js';
 import { saveLoadoutTool } from './save-loadout.js';
 import { myLoadoutsTool } from './my-loadouts.js';
+import { getMyProfileTool } from './get-my-profile.js';
+import { updateProfileTool } from './update-profile.js';
+import { profileStatsTool } from './profile-stats.js';
 
 export interface MCPTool {
   name: string;
@@ -29,4 +32,7 @@ export const toolRegistry: Record<string, MCPTool> = {
   get_meta: getMetaTool,
   save_loadout: saveLoadoutTool,
   my_loadouts: myLoadoutsTool,
+  get_my_profile: getMyProfileTool,
+  update_profile: updateProfileTool,
+  profile_stats: profileStatsTool,
 };

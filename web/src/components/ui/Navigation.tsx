@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils/cn';
+import { useAuth } from '@/hooks/useAuth';
+import { UserMenu } from '../auth/UserMenu';
+import { SignInButton } from '../auth/SignInButton';
 
 const navItems = [
   { name: 'Home', href: '/', icon: Home },
@@ -26,6 +29,7 @@ const navItems = [
 export function Navigation() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated, loading } = useAuth();
 
   return (
     <>
@@ -76,10 +80,16 @@ export function Navigation() {
               })}
             </div>
 
-            {/* CTA Button */}
-            <Link href="/loadouts" className="btn-primary text-sm">
-              Build Loadout
-            </Link>
+            {/* Auth Section */}
+            <div className="flex items-center gap-4">
+              {loading ? (
+                <div className="w-8 h-8 rounded-full bg-cod-surface animate-pulse" />
+              ) : isAuthenticated ? (
+                <UserMenu />
+              ) : (
+                <SignInButton variant="primary" className="text-sm" />
+              )}
+            </div>
           </div>
         </div>
       </nav>
@@ -142,13 +152,11 @@ export function Navigation() {
                 );
               })}
 
-              <Link
-                href="/loadouts"
-                onClick={() => setMobileMenuOpen(false)}
-                className="btn-primary w-full text-center block mt-4"
-              >
-                Build Loadout
-              </Link>
+              {!isAuthenticated && !loading && (
+                <div className="mt-4">
+                  <SignInButton variant="primary" className="w-full" />
+                </div>
+              )}
             </div>
           </motion.div>
         )}

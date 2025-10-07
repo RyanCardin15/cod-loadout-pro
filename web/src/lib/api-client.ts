@@ -76,10 +76,10 @@ async function mcpCall<T = unknown>(method: string, params?: Record<string, unkn
   }
 }
 
-async function callTool<T = unknown>(toolName: string, args: Record<string, unknown>): Promise<T> {
+async function callTool<T = unknown>(toolName: string, args: Record<string, unknown> | unknown): Promise<T> {
   const result = await mcpCall<any>('tools/call', {
     name: toolName,
-    arguments: args,
+    arguments: args as Record<string, unknown>,
   });
 
   return result;

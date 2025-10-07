@@ -5,6 +5,13 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  TwitterAuthProvider,
+  OAuthProvider,
+  connectAuthEmulator
+} from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,9 +22,43 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Log config (without sensitive data)
+console.log('[Firebase] Initializing with config:', {
+  projectId: firebaseConfig.projectId,
+  authDomain: firebaseConfig.authDomain,
+  hasApiKey: !!firebaseConfig.apiKey,
+});
+
 // Initialize Firebase only if it hasn't been initialized yet
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+console.log('[Firebase] App initialized:', app.name);
 
+// Initialize services
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const auth = getAuth(app);
+
+console.log('[Firebase] Services initialized:', {
+  hasDb: !!db,
+  hasAuth: !!auth,
+  hasStorage: !!storage,
+});
+
+// Configure auth emulator for local development
+if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_AUTH_EMULATOR === 'true') {
+  connectAuthEmulator(auth, 'http://localhost:9099');
+}
+
+// OAuth Providers
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+
+export const twitterProvider = new TwitterAuthProvider();
+
+// Discord OAuth Provider (uses generic OAuthProvider)
+export const discordProvider = new OAuthProvider('oidc.discord');
+discordProvider.addScope('identify');
+discordProvider.addScope('email');
+
 export { app };
