@@ -5,6 +5,7 @@ import { Providers } from './providers';
 import { Navigation } from '@/components/ui/Navigation';
 import { Toaster } from 'sonner';
 import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
+import { Analytics } from '@vercel/analytics/react';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -91,6 +92,7 @@ export default function RootLayout({
             <Toaster position="top-right" theme="dark" />
           </Providers>
         </ErrorBoundary>
+        <Analytics />
       </body>
     </html>
   );
