@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run build:mcp && node scripts/copy-mcp-bundle.js && next build",
     "build:mcp": "vite build --config vite.config.mcp.ts",
-    "build:all": "npm run build:mcp && node scripts/copy-mcp-bundle.js && npm run build",
+    "build:all": "npm run build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
