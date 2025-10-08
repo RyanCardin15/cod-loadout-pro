@@ -2,6 +2,7 @@
 
 import { useAuthContext, type AuthProviderType } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 /**
  * Custom hook for authentication operations
@@ -12,20 +13,19 @@ export function useAuth() {
   const router = useRouter();
 
   const signIn = async (provider: AuthProviderType = 'google') => {
-    console.log('[useAuth] Signing in with provider:', provider);
+    logger.debug('User signing in', { provider });
     await signInWithProvider(provider);
   };
 
   const signOut = async () => {
-    console.log('[useAuth] Signing out');
+    logger.debug('User signing out');
     await contextSignOut();
     router.push('/');
   };
 
   const requireAuth = () => {
-    console.log('[useAuth] Checking auth requirement:', { loading, hasUser: !!user });
     if (!loading && !user) {
-      console.log('[useAuth] Not authenticated, redirecting to signin');
+      logger.debug('Auth required, redirecting to signin');
       router.push('/?signin=true');
       return false;
     }
@@ -33,7 +33,6 @@ export function useAuth() {
   };
 
   const isAuthenticated = !!user;
-  console.log('[useAuth] Current state:', { hasUser: !!user, loading, isAuthenticated });
 
   return {
     user,

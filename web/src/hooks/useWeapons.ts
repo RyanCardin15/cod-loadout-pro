@@ -2,50 +2,29 @@
 
 import { useState, useEffect } from 'react';
 
-export interface Weapon {
-  id: string;
-  name: string;
-  game: 'MW3' | 'Warzone' | 'BO6' | 'MW2';
-  category: 'AR' | 'SMG' | 'LMG' | 'Sniper' | 'Marksman' | 'Shotgun' | 'Pistol';
-  stats: {
-    damage: number;
-    range: number;
-    accuracy: number;
-    fireRate: number;
-    mobility: number;
-    control: number;
-    handling: number;
-  };
-  ballistics: {
-    damageRanges: Array<{ range: number; damage: number }>;
-    ttk: { min: number; max: number };
-    fireRate: number;
-    magazineSize: number;
-    reloadTime: number;
-    adTime: number;
-  };
-  meta: {
-    tier: 'S' | 'A' | 'B' | 'C' | 'D';
-    popularity: number;
-    winRate: number;
-    lastUpdated: string;
-  };
-  bestFor: string[];
-  playstyles: string[];
-  imageUrl: string;
-  iconUrl: string;
-  attachmentSlots?: {
-    optic?: string[];
-    barrel?: string[];
-    magazine?: string[];
-    underbarrel?: string[];
-    stock?: string[];
-    laser?: string[];
-    muzzle?: string[];
-    rearGrip?: string[];
-  };
-}
+import { logger } from '@/lib/logger';
+import type { Weapon } from '@/types';
 
+/**
+ * Weapons Data Hook
+ *
+ * Fetches and manages weapon data from the API.
+ * Automatically loads weapons on mount and handles loading/error states.
+ *
+ * @returns Object containing weapons array, loading state, and error
+ *
+ * @example
+ * ```tsx
+ * function WeaponList() {
+ *   const { weapons, loading, error } = useWeapons();
+ *
+ *   if (loading) return <LoadingSpinner />;
+ *   if (error) return <ErrorMessage error={error} />;
+ *
+ *   return <WeaponGrid weapons={weapons} />;
+ * }
+ * ```
+ */
 export function useWeapons() {
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +50,7 @@ export function useWeapons() {
         setWeapons(data.weapons);
         setError(null);
       } catch (err) {
-        console.error('Error fetching weapons:', err);
+        logger.apiError('GET', '/api/weapons', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch weapons'));
         setWeapons([]);
       } finally {

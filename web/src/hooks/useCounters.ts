@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 
 export interface CounterData {
   enemyWeapon: {
@@ -45,7 +46,7 @@ export function useCounters() {
       setCounterData(data.counterData);
       setError(null);
     } catch (err) {
-      console.error('Error analyzing counter:', err);
+      logger.apiError('GET', `/api/counters?weaponId=${weaponId}`, err);
       setError(err instanceof Error ? err : new Error('Failed to analyze counter'));
       setCounterData(null);
     } finally {
