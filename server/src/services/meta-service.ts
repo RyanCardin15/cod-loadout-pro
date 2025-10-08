@@ -55,9 +55,16 @@ export class MetaService {
       const snapshot = await weaponQuery.get();
       const weapons = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Weapon));
 
-      // If no weapons found, return mock data
+      // If no weapons found, return empty tiers with helpful message
       if (weapons.length === 0) {
-        return this.getMockMeta(game, category);
+        console.warn(`[MetaService] No weapons found for game: ${game}, category: ${category}`);
+        return {
+          tiers: { S: [], A: [], B: [], C: [], D: [] },
+          topLoadouts: [],
+          recentChanges: ['No meta data available - database needs population'],
+          lastUpdated: new Date().toISOString(),
+          mode: 'General'
+        };
       }
 
       // Group by tier
@@ -88,42 +95,11 @@ export class MetaService {
         mode: 'General'
       };
     } catch (error) {
-      console.error('Error generating meta from weapons, using mock data:', error);
-      return this.getMockMeta(game, category);
+      console.error('[MetaService] Error generating meta from weapons:', error);
+      throw new Error(`Failed to generate meta data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  private getMockMeta(game?: string, category?: string) {
-    return {
-      tiers: {
-        S: [
-          { id: '1', name: 'SVA 545', category: 'AR', usage: 32.5, winRate: 54.2 },
-          { id: '2', name: 'RAM-9', category: 'SMG', usage: 28.3, winRate: 52.8 },
-          { id: '3', name: 'Holger 26', category: 'LMG', usage: 24.1, winRate: 51.5 }
-        ],
-        A: [
-          { id: '4', name: 'MCW', category: 'AR', usage: 18.7, winRate: 50.2 },
-          { id: '5', name: 'Superi 46', category: 'SMG', usage: 15.2, winRate: 49.8 },
-          { id: '6', name: 'Pulemyot 762', category: 'LMG', usage: 12.4, winRate: 48.5 }
-        ],
-        B: [
-          { id: '7', name: 'MTZ-556', category: 'AR', usage: 8.3, winRate: 47.2 },
-          { id: '8', name: 'Striker', category: 'SMG', usage: 6.7, winRate: 46.8 }
-        ],
-        C: [],
-        D: []
-      },
-      topLoadouts: [],
-      recentChanges: [
-        'SVA 545 buffed - now S-tier in Warzone',
-        'RAM-9 mobility increased by 5%',
-        'Holger 26 damage range extended',
-        'MCW recoil pattern improved'
-      ],
-      lastUpdated: new Date().toISOString(),
-      mode: game || 'All Games'
-    };
-  }
 
   private filterTiersByCategory(tiers: any, category: string) {
     const filteredTiers: any = {};

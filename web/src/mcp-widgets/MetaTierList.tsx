@@ -1,29 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { MetaTierListData, TierData, Weapon, BaseWidgetProps } from './types';
 
-interface Weapon {
-  id: string;
-  name: string;
-  usage: number;
-}
-
-interface TierData {
-  S: Weapon[];
-  A: Weapon[];
-  B: Weapon[];
-  C: Weapon[];
-  D: Weapon[];
-}
-
-interface MetaTierListProps {
-  toolOutput?: {
-    tiers: TierData;
-    topLoadouts?: any[];
-    recentChanges?: string[];
-    lastUpdated?: string;
-  };
-}
-
-const MetaTierList: React.FC<MetaTierListProps> = ({ toolOutput }) => {
+const MetaTierList: React.FC<BaseWidgetProps<MetaTierListData>> = ({ toolOutput }) => {
   const [tiers, setTiers] = useState<TierData>({
     S: [],
     A: [],
@@ -37,10 +15,13 @@ const MetaTierList: React.FC<MetaTierListProps> = ({ toolOutput }) => {
   useEffect(() => {
     // Access data from window.openai.toolOutput if available
     const openai = (window as any).openai;
-    const data = toolOutput || openai?.toolOutput;
+    let rawData = toolOutput || openai?.toolOutput;
 
-    if (data) {
-      setTiers(data.tiers || { S: [], A: [], B: [], C: [], D: [] });
+    // Handle nested structuredContent from MCP tool response
+    const data = rawData?.structuredContent || rawData;
+
+    if (data?.tiers) {
+      setTiers(data.tiers);
       setRecentChanges(data.recentChanges || []);
       setLastUpdated(data.lastUpdated || '');
     }

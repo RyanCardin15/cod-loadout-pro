@@ -61,29 +61,12 @@ export const getMetaTool: MCPTool = {
         mode: params.mode
       });
     } catch (error) {
-      // Fallback mock data if Firebase not configured
-      console.error('Firebase error, using mock data:', error);
+      console.error('[get_meta] Error fetching meta data:', error);
+      // Return empty structure with error message
       meta = {
-        tiers: {
-          S: [
-            { id: '1', name: 'SVA 545', usage: 32.5 },
-            { id: '2', name: 'RAM-9', usage: 28.3 },
-            { id: '3', name: 'Holger 26', usage: 24.1 }
-          ],
-          A: [
-            { id: '4', name: 'MCW', usage: 18.7 },
-            { id: '5', name: 'Superi 46', usage: 15.2 }
-          ],
-          B: [],
-          C: [],
-          D: []
-        },
+        tiers: { S: [], A: [], B: [], C: [], D: [] },
         topLoadouts: [],
-        recentChanges: [
-          'SVA 545 buffed - now S-tier in Warzone',
-          'RAM-9 mobility increased by 5%',
-          'Holger 26 damage range extended'
-        ],
+        recentChanges: ['Error loading meta data - please check database configuration'],
         lastUpdated: new Date().toISOString()
       };
     }
