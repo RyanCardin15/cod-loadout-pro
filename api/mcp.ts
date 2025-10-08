@@ -67,9 +67,10 @@ class VercelMCPHandler {
 
       try {
         // Get userId from the handler instance
+        const meta = request.params._meta as any;
         const context = {
-          userId: this.currentUserId || request.params._meta?.userId || 'anonymous',
-          sessionId: request.params._meta?.sessionId || 'default',
+          userId: this.currentUserId || (meta?.userId as string) || 'anonymous',
+          sessionId: (meta?.sessionId as string) || 'default',
         };
 
         const result = await tool.execute(args, context);
@@ -180,9 +181,10 @@ class VercelMCPHandler {
       }
 
       try {
+        const meta = request.params._meta as any;
         const context = {
-          userId: this.currentUserId || request.params._meta?.userId || 'anonymous',
-          sessionId: request.params._meta?.sessionId || 'default',
+          userId: this.currentUserId || (meta?.userId as string) || 'anonymous',
+          sessionId: (meta?.sessionId as string) || 'default',
         };
 
         const result = await tool.execute(args, context);
