@@ -198,14 +198,14 @@ export function getEnv<K extends keyof Env>(key: K): Env[K] {
 /**
  * Check if we're in development mode
  */
-export const isDevelopment = process.env.NODE_ENV === 'development';
+export const isDevelopment = process.env['NODE_ENV'] === 'development';
 
 /**
  * Check if we're in production mode
  */
-export const isProduction = process.env.NODE_ENV === 'production';
+export const isProduction = process.env['NODE_ENV'] === 'production';
 
 /**
  * Check if we're in test mode
  */
-export const isTest = process.env.NODE_ENV === 'test';
+export const isTest = process.env['NODE_ENV'] === 'test';

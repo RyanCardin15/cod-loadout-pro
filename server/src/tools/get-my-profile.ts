@@ -50,6 +50,7 @@ export async function getMyProfile(args: z.infer<typeof getMyProfileSchema>) {
 
 export const getMyProfileTool = {
   name: 'get_my_profile',
+  title: 'Get My Profile',
   description: 'Get the current user\'s profile including playstyle preferences, stats, and activity history. Requires authentication.',
   inputSchema: {
     type: 'object',
@@ -64,5 +65,8 @@ export const getMyProfileTool = {
         },
       },
     },
+  },
+  async execute(input: unknown, context: { userId: string; sessionId: string }) {
+    return getMyProfile(input as z.infer<typeof getMyProfileSchema>);
   },
 };

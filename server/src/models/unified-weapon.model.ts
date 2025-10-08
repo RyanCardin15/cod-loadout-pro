@@ -13,8 +13,8 @@
  * - Backward compatibility with V1/V2
  */
 
-import { DataSource } from '../../../scripts/lib/lineage/lineage-schema';
-import type { MultiSourceField, ConfidenceScore } from '../../../scripts/lib/lineage/lineage-schema';
+import { DataSource } from '../types/lineage-schema';
+import type { MultiSourceField, ConfidenceScore } from '../types/lineage-schema';
 
 // ============================================================================
 // Legacy Schema Interfaces (V1 and V2)

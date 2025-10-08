@@ -39,7 +39,7 @@ export const storage = getStorage(app);
 export const auth = getAuth(app);
 
 // Configure auth emulator for local development
-if (process.env.NODE_ENV === 'development' && process.env['NEXT_PUBLIC_USE_AUTH_EMULATOR'] === 'true') {
+if (process.env['NODE_ENV'] === 'development' && process.env['NEXT_PUBLIC_USE_AUTH_EMULATOR'] === 'true') {
   connectAuthEmulator(auth, 'http://localhost:9099');
 }
 

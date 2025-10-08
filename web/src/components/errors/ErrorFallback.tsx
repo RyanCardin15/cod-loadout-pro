@@ -41,11 +41,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
 
   // In production, show generic message; in dev, show actual error
   const errorMessage =
-    process.env.NODE_ENV === 'development'
+    process.env['NODE_ENV'] === 'development'
       ? error?.message || 'An unexpected error occurred'
       : 'Something went wrong. Please try again.';
 
-  const showStack = process.env.NODE_ENV === 'development' && error?.stack;
+  const showStack = process.env['NODE_ENV'] === 'development' && error?.stack;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-cod-black px-4">

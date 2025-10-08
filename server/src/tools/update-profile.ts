@@ -45,17 +45,21 @@ export async function updateProfile(args: z.infer<typeof updateProfileSchema>) {
   const playstyleUpdates = updates.playstyle
     ? {
         playstyle: {
-          ...currentProfile.playstyle,
-          ...updates.playstyle,
-          ranges: updates.playstyle.ranges
-            ? { ...currentProfile.playstyle.ranges, ...updates.playstyle.ranges }
-            : currentProfile.playstyle.ranges,
+          primary: updates.playstyle.primary ?? currentProfile.playstyle.primary,
+          ranges: {
+            close: updates.playstyle.ranges?.close ?? currentProfile.playstyle.ranges.close,
+            medium: updates.playstyle.ranges?.medium ?? currentProfile.playstyle.ranges.medium,
+            long: updates.playstyle.ranges?.long ?? currentProfile.playstyle.ranges.long,
+          },
+          pacing: updates.playstyle.pacing ?? currentProfile.playstyle.pacing,
+          strengths: updates.playstyle.strengths ?? currentProfile.playstyle.strengths,
         },
       }
     : {};
 
   await userService.updateUserProfile(userId, {
-    ...updates,
+    displayName: updates.displayName,
+    games: updates.games,
     ...playstyleUpdates,
   });
 
@@ -88,6 +92,7 @@ export async function updateProfile(args: z.infer<typeof updateProfileSchema>) {
 
 export const updateProfileTool = {
   name: 'update_profile',
+  title: 'Update Profile',
   description:
     'Update the current user\'s profile preferences including playstyle, game preferences, and display name. Requires authentication.',
   inputSchema: {
@@ -145,5 +150,8 @@ export const updateProfileTool = {
         },
       },
     },
+  },
+  async execute(input: unknown, context: { userId: string; sessionId: string }) {
+    return updateProfile(input as z.infer<typeof updateProfileSchema>);
   },
 };

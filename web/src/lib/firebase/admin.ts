@@ -21,9 +21,9 @@ export function initializeFirebaseAdmin(): void {
     return;
   }
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const projectId = process.env['FIREBASE_PROJECT_ID'];
+  const clientEmail = process.env['FIREBASE_CLIENT_EMAIL'];
+  const privateKey = process.env['FIREBASE_PRIVATE_KEY']?.replace(/\\n/g, '\n');
 
   if (!projectId || !clientEmail || !privateKey) {
     const message = 'Firebase Admin credentials not configured. Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY environment variables.';
@@ -41,7 +41,7 @@ export function initializeFirebaseAdmin(): void {
           clientEmail,
           privateKey,
         }),
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+        storageBucket: process.env['FIREBASE_STORAGE_BUCKET'],
       });
       console.log('[Firebase Admin] Successfully initialized');
     }

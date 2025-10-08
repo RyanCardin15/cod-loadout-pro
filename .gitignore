@@ -75,3 +75,4 @@ firebase-admin-key.json
 
 # Environment setup files
 VERCEL_ENV_SETUP.md
+.playwright-mcp/
