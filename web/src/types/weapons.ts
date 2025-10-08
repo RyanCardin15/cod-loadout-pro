@@ -167,3 +167,92 @@ export interface WeaponSummary {
     tier: Tier;
   };
 }
+
+/**
+ * MultiSourceField wrapper from V3 schema
+ * Tracks data from multiple sources with confidence scores
+ */
+export interface MultiSourceField<T = any> {
+  currentValue: T;
+  sources: Array<{
+    source: string;
+    value: T;
+    timestamp: number;
+    reference?: string;
+  }>;
+  primarySource: string;
+  confidence: {
+    level: 'high' | 'medium' | 'low';
+    score: number;
+  };
+  lastUpdated: number;
+  hasConflict: boolean;
+}
+
+/**
+ * V3 weapon statistics with MultiSourceField wrappers
+ */
+export interface WeaponStatsV3 {
+  damage: MultiSourceField<number>;
+  range: MultiSourceField<number>;
+  accuracy: MultiSourceField<number>;
+  fireRate: MultiSourceField<number>;
+  mobility: MultiSourceField<number>;
+  control: MultiSourceField<number>;
+  handling: MultiSourceField<number>;
+}
+
+/**
+ * V3 weapon ballistics with MultiSourceField wrappers
+ */
+export interface WeaponBallisticsV3 {
+  damageRanges: MultiSourceField<DamageRange[]>;
+  ttk: MultiSourceField<TimeToKill>;
+  fireRate: MultiSourceField<number>;
+  magazineSize: MultiSourceField<number>;
+  reloadTime: MultiSourceField<number>;
+  adTime: MultiSourceField<number>;
+}
+
+/**
+ * V3 weapon meta with MultiSourceField wrappers
+ */
+export interface WeaponMetaV3 {
+  tier: MultiSourceField<Tier>;
+  popularity: MultiSourceField<number>;
+  winRate: MultiSourceField<number>;
+}
+
+/**
+ * V3 Weapon schema with MultiSourceField tracking
+ * Used when receiving data from the server with lineage tracking
+ */
+export interface WeaponV3 {
+  id: string;
+  name: string;
+  game: Game;
+  category: WeaponCategory;
+  stats: WeaponStatsV3;
+  ballistics: WeaponBallisticsV3;
+  meta: WeaponMetaV3;
+  bestFor?: string[];
+  playstyles?: string[];
+  imageUrl?: string;
+  iconUrl?: string;
+  attachmentSlots?: AttachmentSlots;
+  lineage?: {
+    totalSources: number;
+    averageConfidence: number;
+    conflictCount: number;
+    staleDataCount: number;
+    lastUpdated: number;
+    lastValidated: number;
+    contributingSources: string[];
+  };
+}
+
+/**
+ * Union type for handling both V1 and V3 weapon formats
+ * Allows functions to accept either schema version
+ */
+export type AnyWeapon = Weapon | WeaponV3;
