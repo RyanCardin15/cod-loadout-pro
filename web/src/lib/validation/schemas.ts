@@ -337,6 +337,61 @@ export const metaQuerySchema = z.object({
   game: gameSchema.default('MW3'),
 });
 
+/**
+ * Query parameters for fetching attachments
+ */
+export const attachmentQuerySchema = z.object({
+  slot: z.string().max(50).optional(),
+  weaponId: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(100),
+});
+
+/**
+ * Create attachment input schema
+ */
+export const createAttachmentInputSchema = z.object({
+  name: z.string().min(1, 'Attachment name is required').max(100),
+  slot: z.string().min(1, 'Slot is required').max(50),
+  weaponId: z.string().min(1).optional(),
+  stats: z.record(z.number()).optional(),
+  description: z.string().max(500).optional(),
+});
+
+/**
+ * Query parameters for counter analysis endpoint
+ */
+export const counterQuerySchema = z.object({
+  weaponId: z.string().min(1, 'Weapon ID is required'),
+  limit: z.coerce.number().int().min(1).max(20).default(5),
+});
+
+/**
+ * Counter weapon data schema
+ */
+export const counterWeaponSchema = z.object({
+  weaponId: z.string().min(1),
+  weaponName: z.string().min(1),
+  category: weaponCategorySchema,
+  effectiveness: z.number().min(0).max(100),
+  reasoning: z.string(),
+});
+
+/**
+ * Counter analysis response schema
+ */
+export const counterDataSchema = z.object({
+  enemyWeapon: z.object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    category: weaponCategorySchema,
+    strengths: z.array(z.string()),
+    weaknesses: z.array(z.string()),
+  }),
+  counterWeapons: z.array(counterWeaponSchema),
+  strategies: z.array(z.string()),
+  tacticalAdvice: z.array(z.string()),
+});
+
 // ============================================================================
 // Type Inference Exports
 // ============================================================================
@@ -370,3 +425,8 @@ export type WeaponId = z.infer<typeof weaponIdSchema>;
 export type LoadoutQuery = z.infer<typeof loadoutQuerySchema>;
 export type LoadoutId = z.infer<typeof loadoutIdSchema>;
 export type MetaQuery = z.infer<typeof metaQuerySchema>;
+export type AttachmentQuery = z.infer<typeof attachmentQuerySchema>;
+export type CreateAttachmentInput = z.infer<typeof createAttachmentInputSchema>;
+export type CounterQuery = z.infer<typeof counterQuerySchema>;
+export type CounterWeapon = z.infer<typeof counterWeaponSchema>;
+export type CounterData = z.infer<typeof counterDataSchema>;

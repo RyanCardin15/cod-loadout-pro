@@ -1,6 +1,4 @@
 import * as admin from 'firebase-admin';
-import { logger } from '@/lib/logger';
-import { validateServerEnv } from '@/lib/env';
 
 let initialized = false;
 let initializationError: Error | null = null;
@@ -23,33 +21,36 @@ export function initializeFirebaseAdmin(): void {
     return;
   }
 
-  try {
-    // Validate environment variables first
-    const env = validateServerEnv();
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
+  if (!projectId || !clientEmail || !privateKey) {
+    const message = 'Firebase Admin credentials not configured. Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY environment variables.';
+    console.error('[Firebase Admin]', message);
+    initializationError = new FirebaseAdminError(message);
+    initialized = true;
+    return;
+  }
+
+  try {
     if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert({
-          projectId: env.FIREBASE_PROJECT_ID,
-          clientEmail: env.FIREBASE_CLIENT_EMAIL,
-          privateKey: env.FIREBASE_PRIVATE_KEY,
+          projectId,
+          clientEmail,
+          privateKey,
         }),
-        storageBucket: env.FIREBASE_STORAGE_BUCKET,
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
       });
-      logger.info('[Firebase Admin] Successfully initialized', {
-        projectId: env.FIREBASE_PROJECT_ID,
-      });
+      console.log('[Firebase Admin] Successfully initialized');
     }
 
     initialized = true;
     initializationError = null;
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : 'Failed to initialize Firebase Admin SDK';
-
-    logger.firebaseError('initialize', error);
+    const message = 'Failed to initialize Firebase Admin SDK';
+    console.error('[Firebase Admin]', message, error);
     initializationError = new FirebaseAdminError(message, error);
     initialized = true;
   }

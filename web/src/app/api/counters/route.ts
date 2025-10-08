@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
 import { logger } from '@/lib/logger';
+import { validateQuery, handleApiError } from '@/lib/utils/validation';
+import { counterQuerySchema } from '@/lib/validation/schemas';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const weaponId = searchParams.get('weaponId');
-
-    if (!weaponId) {
-      return NextResponse.json(
-        { error: 'weaponId parameter is required' },
-        { status: 400 }
-      );
-    }
+    // Validate query parameters
+    const { weaponId, limit } = validateQuery(request, counterQuerySchema);
 
     // Get the enemy weapon
     const weaponDoc = await db().collection('weapons').doc(weaponId).get();
@@ -99,7 +97,7 @@ export async function GET(request: NextRequest) {
       })
       .filter((w: any) => w.effectiveness >= 40 && w.weaponId !== weaponId)
       .sort((a: any, b: any) => b.effectiveness - a.effectiveness)
-      .slice(0, 5);
+      .slice(0, limit);
 
     // Generate tactical advice
     const strategies = [];
@@ -136,9 +134,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.apiError('GET', '/api/counters', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze counters' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

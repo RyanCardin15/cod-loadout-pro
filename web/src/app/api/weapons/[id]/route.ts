@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
 import { logger } from '@/lib/logger';
+import { validateIdParam } from '@/lib/validation/route-params';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const weaponId = params.id;
+    // Validate route parameter
+    const weaponId = validateIdParam(params);
+    if (weaponId instanceof NextResponse) {
+      return weaponId;
+    }
 
     const doc = await db().collection('weapons').doc(weaponId).get();
 

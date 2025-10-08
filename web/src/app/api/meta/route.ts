@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, FirebaseAdminError } from '@/lib/firebase/admin';
 import { validateQuery, handleApiError } from '@/lib/utils/validation';
-import { metaQuerySchema } from '@/lib/validations/meta.schema';
+import { metaQuerySchema } from '@/lib/validation/schemas';
 import type { MetaResponse } from '@/types';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
