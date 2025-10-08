@@ -103,6 +103,17 @@ const MetaTierList: React.FC<MetaTierListProps> = ({ toolOutput }) => {
     );
   };
 
+  // Find the highest non-empty tier
+  const getHighestTier = (): keyof TierData | null => {
+    const tierOrder: (keyof TierData)[] = ['S', 'A', 'B', 'C', 'D'];
+    return tierOrder.find(tier => tiers[tier]?.length > 0) || null;
+  };
+
+  // Check if there's any data at all
+  const hasAnyData = Object.values(tiers).some(tierWeapons => tierWeapons?.length > 0);
+  const highestTier = getHighestTier();
+  const showEmptySTierNotice = tiers.S?.length === 0 && highestTier && highestTier !== 'S';
+
   return (
     <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
       <div className="mb-8">
@@ -116,11 +127,28 @@ const MetaTierList: React.FC<MetaTierListProps> = ({ toolOutput }) => {
         )}
       </div>
 
-      <div className="mb-8">
-        {(['S', 'A', 'B', 'C', 'D'] as const).map((tier) =>
-          renderTier(tier, tiers[tier])
-        )}
-      </div>
+      {!hasAnyData ? (
+        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-8 text-center">
+          <p className="text-gray-400 text-lg mb-2">📊 No meta data available yet</p>
+          <p className="text-gray-500 text-sm">Check back soon for updated weapon rankings</p>
+        </div>
+      ) : (
+        <>
+          {showEmptySTierNotice && (
+            <div className="bg-cod-gray/50 border border-yellow-500/30 rounded-lg p-4 mb-6">
+              <p className="text-yellow-400 text-sm">
+                ℹ️ No S-tier weapons currently — showing highest available tier ({highestTier})
+              </p>
+            </div>
+          )}
+
+          <div className="mb-8">
+            {(['S', 'A', 'B', 'C', 'D'] as const).map((tier) =>
+              renderTier(tier, tiers[tier])
+            )}
+          </div>
+        </>
+      )}
 
       {recentChanges && recentChanges.length > 0 && (
         <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-6 mt-8">
