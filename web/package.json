@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:mcp": "vite build --config vite.config.mcp.ts",
-    "build:all": "npm run build:mcp && npm run build",
+    "build:all": "npm run build:mcp && cp dist/counterplay-components.umd.js public/ && npm run build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
