@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { db, FirebaseAdminError } from '@/lib/firebase/admin';
 import { validateQuery, validateBody, handleApiError } from '@/lib/utils/validation';
 import { loadoutQuerySchema, createLoadoutSchema } from '@/lib/validations/loadout.schema';
 import type { LoadoutsResponse, LoadoutResponse } from '@/types';
 
+/**
+ * GET /api/loadouts
+ *
+ * Fetch user loadouts with optional filtering
+ *
+ * @param userId - Filter by user ID
+ * @param game - Filter by game (MW3, Warzone, BO6, MW2)
+ * @param limit - Maximum results (1-100, default: 20)
+ */
 export async function GET(request: NextRequest) {
   try {
     // Validate query parameters
@@ -44,6 +54,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/loadouts
+ *
+ * Create a new user loadout
+ *
+ * @body CreateLoadoutInput - Loadout data to create
+ * @returns Created loadout with generated ID
+ */
 export async function POST(request: NextRequest) {
   try {
     // Validate request body

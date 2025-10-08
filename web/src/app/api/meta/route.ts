@@ -52,9 +52,21 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const firstDoc = snapshotQuery.docs[0];
+    if (!firstDoc) {
+      return NextResponse.json({
+        meta: {
+          tiers: { S: [], A: [], B: [], C: [], D: [] },
+          recentChanges: [],
+          proLoadouts: [],
+          lastUpdated: new Date().toISOString(),
+        },
+      });
+    }
+
     const metaSnapshot: any = {
-      id: snapshotQuery.docs[0].id,
-      ...snapshotQuery.docs[0].data(),
+      id: firstDoc.id,
+      ...firstDoc.data(),
     };
 
     // Enrich tier data with full weapon details if not already present

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error analyzing counters:', error);
+    logger.apiError('GET', '/api/counters', error);
     return NextResponse.json(
       { error: 'Failed to analyze counters' },
       { status: 500 }
