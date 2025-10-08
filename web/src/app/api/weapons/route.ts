@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+import { db, FirebaseAdminError } from '@/lib/firebase/admin';
+import { validateQuery, handleApiError } from '@/lib/utils/validation';
+import { weaponQuerySchema } from '@/lib/validations/weapon.schema';
+import type { WeaponsResponse } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const game = searchParams.get('game');
-    const category = searchParams.get('category');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    // Validate query parameters
+    const { game, category, limit } = validateQuery(request, weaponQuerySchema);
 
     let weaponQuery: any = db().collection('weapons');
 
@@ -27,12 +28,18 @@ export async function GET(request: NextRequest) {
       ...doc.data(),
     }));
 
-    return NextResponse.json({ weapons });
+    const response: WeaponsResponse = { weapons };
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching weapons:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch weapons' },
-      { status: 500 }
-    );
+    if (error instanceof FirebaseAdminError) {
+      return NextResponse.json(
+        {
+          error: 'Database connection failed. Please ensure Firebase Admin is properly configured.',
+          details: error.message
+        },
+        { status: 503 }
+      );
+    }
+    return handleApiError(error);
   }
 }

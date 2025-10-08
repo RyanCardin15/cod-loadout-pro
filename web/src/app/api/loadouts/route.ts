@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+import { db, FirebaseAdminError } from '@/lib/firebase/admin';
+import { validateQuery, validateBody, handleApiError } from '@/lib/utils/validation';
+import { loadoutQuerySchema, createLoadoutSchema } from '@/lib/validations/loadout.schema';
+import type { LoadoutsResponse, LoadoutResponse } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const userId = searchParams.get('userId');
-    const game = searchParams.get('game');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    // Validate query parameters
+    const { userId, game, limit } = validateQuery(request, loadoutQuerySchema);
 
     let loadoutQuery: any = db().collection('loadouts');
 
@@ -27,22 +28,29 @@ export async function GET(request: NextRequest) {
       ...doc.data(),
     }));
 
-    return NextResponse.json({ loadouts });
+    const response: LoadoutsResponse = { loadouts };
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching loadouts:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch loadouts' },
-      { status: 500 }
-    );
+    if (error instanceof FirebaseAdminError) {
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          details: error.message
+        },
+        { status: 503 }
+      );
+    }
+    return handleApiError(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Validate request body
+    const validatedData = await validateBody(request, createLoadoutSchema);
 
     const loadoutData = {
-      ...body,
+      ...validatedData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       favorites: 0,
@@ -50,18 +58,22 @@ export async function POST(request: NextRequest) {
 
     const docRef = await db().collection('loadouts').add(loadoutData);
 
-    return NextResponse.json(
-      {
-        loadout: { id: docRef.id, ...loadoutData },
-        message: 'Loadout created successfully'
-      },
-      { status: 201 }
-    );
+    const response: LoadoutResponse = {
+      loadout: { id: docRef.id, ...loadoutData } as any,
+      message: 'Loadout created successfully'
+    };
+
+    return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error creating loadout:', error);
-    return NextResponse.json(
-      { error: 'Failed to create loadout' },
-      { status: 500 }
-    );
+    if (error instanceof FirebaseAdminError) {
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          details: error.message
+        },
+        { status: 503 }
+      );
+    }
+    return handleApiError(error);
   }
 }

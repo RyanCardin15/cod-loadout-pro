@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { User, Settings, LogOut, Heart, BarChart3 } from 'lucide-react';
 
@@ -53,9 +54,11 @@ export function UserMenu() {
         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-cod-surface/50 transition-colors"
       >
         {user.photoURL ? (
-          <img
+          <Image
             src={user.photoURL}
             alt={user.displayName || 'User'}
+            width={32}
+            height={32}
             className="w-8 h-8 rounded-full border-2 border-cod-accent"
           />
         ) : (

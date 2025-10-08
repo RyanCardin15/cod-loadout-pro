@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+import { db, FirebaseAdminError } from '@/lib/firebase/admin';
+import { validateQuery, handleApiError } from '@/lib/utils/validation';
+import { metaQuerySchema } from '@/lib/validations/meta.schema';
+import type { MetaResponse } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const game = searchParams.get('game') || 'MW3';
+    // Validate query parameters
+    const { game } = validateQuery(request, metaQuerySchema);
 
     // Get latest meta snapshot
     const snapshotQuery = await db()
@@ -77,12 +80,18 @@ export async function GET(request: NextRequest) {
       metaSnapshot.tiers = enrichedTiers;
     }
 
-    return NextResponse.json({ meta: metaSnapshot });
+    const response: MetaResponse = { meta: metaSnapshot };
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching meta:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch meta data' },
-      { status: 500 }
-    );
+    if (error instanceof FirebaseAdminError) {
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          details: error.message
+        },
+        { status: 503 }
+      );
+    }
+    return handleApiError(error);
   }
 }
