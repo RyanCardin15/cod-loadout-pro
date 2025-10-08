@@ -45,6 +45,9 @@ export interface WeaponListData {
     category?: string;
     situation?: string;
   };
+  // Error handling fields
+  isEmpty?: boolean;
+  errorState?: ErrorState;
 }
 
 // LoadoutCard types
@@ -71,7 +74,9 @@ export type ErrorType =
   | 'WEAPON_NOT_FOUND'
   | 'ENEMY_WEAPON_NOT_FOUND'
   | 'NO_COUNTERS_FOUND'
+  | 'NO_RESULTS'
   | 'FIREBASE_CONNECTION_ERROR'
+  | 'VALIDATION_ERROR'
   | 'ATTACHMENT_FETCH_ERROR'
   | 'PERK_FETCH_ERROR'
   | 'EQUIPMENT_FETCH_ERROR'

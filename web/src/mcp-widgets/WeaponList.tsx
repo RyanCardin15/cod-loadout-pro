@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { WeaponListData, Weapon, BaseWidgetProps } from './types';
+import { WeaponListData, BaseWidgetProps } from './types';
 
 const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) => {
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [data, setData] = useState<WeaponListData | null>(null);
 
   useEffect(() => {
     const openai = (window as any).openai;
     let rawData = toolOutput || openai?.toolOutput;
-    const data = rawData?.structuredContent || rawData;
+    const extractedData = rawData?.structuredContent || rawData;
 
-    if (data?.weapons) {
-      setWeapons(data.weapons);
-      setFilters(data.filters || {});
+    if (extractedData?.weapons !== undefined) {
+      setData(extractedData);
     }
   }, [toolOutput]);
 
@@ -45,16 +43,180 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
     );
   };
 
-  if (weapons.length === 0) {
+  // Loading state
+  if (!data) {
     return (
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
-        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-8 text-center">
-          <p className="text-gray-400 text-lg mb-2">🔫 No weapons found</p>
-          <p className="text-gray-500 text-sm">Try adjusting your search filters</p>
+        <div className="animate-pulse">
+          <div className="h-8 bg-cod-gray rounded w-3/4 mb-4"></div>
+          <div className="h-32 bg-cod-gray rounded mb-4"></div>
+          <div className="h-32 bg-cod-gray rounded mb-4"></div>
+          <div className="h-32 bg-cod-gray rounded"></div>
         </div>
       </div>
     );
   }
+
+  // Empty state - Firebase connection error
+  if (data.isEmpty && data.errorState?.type === 'FIREBASE_CONNECTION_ERROR') {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-cod-orange mb-6">
+          🔫 WEAPON SEARCH
+        </h1>
+        <div
+          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="text-6xl mb-4" aria-hidden="true">⚠️</div>
+          <h3 className="text-xl font-bold text-gray-300 mb-2">
+            Connection Error
+          </h3>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            {data.errorState.message}
+          </p>
+          <div
+            className="inline-block px-6 py-3 bg-cod-orange/20 border border-cod-orange/50 rounded-lg text-cod-orange font-semibold hover:bg-cod-orange/30 transition-colors cursor-pointer"
+            role="button"
+            tabIndex={0}
+            aria-label="Retry weapon search"
+          >
+            Try Again
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - validation error
+  if (data.isEmpty && data.errorState?.type === 'VALIDATION_ERROR') {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-cod-orange mb-6">
+          🔫 WEAPON SEARCH
+        </h1>
+        <div
+          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="text-6xl mb-4" aria-hidden="true">⚠️</div>
+          <h3 className="text-xl font-bold text-gray-300 mb-2">
+            Invalid Search Parameters
+          </h3>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            {data.errorState.message}
+          </p>
+          <p className="text-gray-500 text-sm">
+            Please check your search criteria and try again.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - unknown error
+  if (data.isEmpty && data.errorState && data.errorState.type === 'UNKNOWN_ERROR') {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-cod-orange mb-6">
+          🔫 WEAPON SEARCH
+        </h1>
+        <div
+          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="text-6xl mb-4" aria-hidden="true">❌</div>
+          <h3 className="text-xl font-bold text-gray-300 mb-2">
+            Something Went Wrong
+          </h3>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            {data.errorState.message}
+          </p>
+          <p className="text-gray-500 text-sm">
+            Please try again or contact support if the issue persists.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - no results found (not an error, just no matches)
+  if (!data.weapons || data.weapons.length === 0) {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-cod-orange mb-6">
+          🔫 WEAPON SEARCH
+        </h1>
+        <div
+          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="text-6xl mb-4" aria-hidden="true">🔍</div>
+          <h3 className="text-xl font-bold text-gray-300 mb-2">
+            No Weapons Found
+          </h3>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            {data.errorState?.message || 'No weapons match your search criteria.'}
+          </p>
+
+          {/* Show active filters */}
+          {data.filters && Object.keys(data.filters).length > 0 && (
+            <div className="mt-6 text-left max-w-md mx-auto bg-cod-black/50 rounded-lg p-4">
+              <p className="text-cod-orange font-semibold mb-3 text-sm uppercase tracking-wide">
+                Active Filters:
+              </p>
+              <div className="space-y-2">
+                {data.filters.game && data.filters.game !== 'all' && (
+                  <div className="text-white text-sm flex items-center gap-2">
+                    <span className="text-cod-orange">•</span>
+                    <span className="text-gray-400">Game:</span>
+                    <span>{data.filters.game}</span>
+                  </div>
+                )}
+                {data.filters.category && data.filters.category !== 'all' && (
+                  <div className="text-white text-sm flex items-center gap-2">
+                    <span className="text-cod-orange">•</span>
+                    <span className="text-gray-400">Category:</span>
+                    <span>{data.filters.category}</span>
+                  </div>
+                )}
+                {data.filters.situation && (
+                  <div className="text-white text-sm flex items-center gap-2">
+                    <span className="text-cod-orange">•</span>
+                    <span className="text-gray-400">Situation:</span>
+                    <span>{data.filters.situation}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Suggestions */}
+          <div className="mt-6">
+            <p className="text-gray-500 text-sm mb-3">Try:</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <span className="px-3 py-1 bg-cod-gray border border-cod-orange/30 rounded-full text-xs text-gray-300 hover:bg-cod-orange/20 transition-colors cursor-pointer">
+                Removing filters
+              </span>
+              <span className="px-3 py-1 bg-cod-gray border border-cod-orange/30 rounded-full text-xs text-gray-300 hover:bg-cod-orange/20 transition-colors cursor-pointer">
+                Different category
+              </span>
+              <span className="px-3 py-1 bg-cod-gray border border-cod-orange/30 rounded-full text-xs text-gray-300 hover:bg-cod-orange/20 transition-colors cursor-pointer">
+                Broader search
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const weapons = data.weapons;
+  const filters = data.filters || {};
 
   return (
     <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
@@ -88,7 +250,7 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
       <div className="space-y-4">
         {weapons.map((weapon, index) => (
           <div
-            key={weapon.id}
+            key={weapon?.id || index}
             className="bg-cod-gray border border-cod-orange/30 rounded-lg p-5 hover:bg-cod-gray/70 transition-all duration-200 hover:scale-[1.02]"
           >
             <div className="flex items-start justify-between mb-4">
@@ -98,23 +260,23 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
                     #{index + 1}
                   </span>
                   <h3 className="text-white font-bold text-xl">
-                    {weapon.name}
+                    {weapon?.name || 'Unknown Weapon'}
                   </h3>
-                  {weapon.tier && (
+                  {weapon?.tier && (
                     <span className={`${getTierColor(weapon.tier)} px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider`}>
                       {weapon.tier}-TIER
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-gray-400">
-                  <span>{weapon.category}</span>
-                  {weapon.game && (
+                  <span>{weapon?.category || 'N/A'}</span>
+                  {weapon?.game && (
                     <>
                       <span>•</span>
                       <span>{weapon.game}</span>
                     </>
                   )}
-                  {weapon.popularity !== undefined && (
+                  {weapon?.popularity !== undefined && weapon?.popularity !== null && (
                     <>
                       <span>•</span>
                       <span className="text-cod-orange font-semibold">
@@ -125,7 +287,7 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
                 </div>
               </div>
 
-              {weapon.ttk && (
+              {weapon?.ttk !== undefined && weapon?.ttk !== null && (
                 <div className="text-right ml-4">
                   <div className="text-xs text-gray-400 uppercase tracking-wide">TTK</div>
                   <div className="text-2xl font-bold text-cod-orange">
@@ -137,17 +299,17 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
             </div>
 
             {/* Stats Section */}
-            {weapon.stats && (
+            {weapon?.stats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-700">
-                {getStatBar(weapon.stats.damage, 'DMG')}
-                {getStatBar(weapon.stats.range, 'RNG')}
-                {getStatBar(weapon.stats.mobility, 'MOB')}
-                {getStatBar(weapon.stats.control, 'CTL')}
+                {getStatBar(weapon.stats?.damage || 0, 'DMG')}
+                {getStatBar(weapon.stats?.range || 0, 'RNG')}
+                {getStatBar(weapon.stats?.mobility || 0, 'MOB')}
+                {getStatBar(weapon.stats?.control || 0, 'CTL')}
               </div>
             )}
 
             {/* Popularity Bar */}
-            {weapon.popularity !== undefined && (
+            {weapon?.popularity !== undefined && weapon?.popularity !== null && (
               <div className="mt-4 pt-4 border-t border-gray-700">
                 <div className="flex justify-between text-xs mb-2">
                   <span className="text-gray-400">Popularity</span>
