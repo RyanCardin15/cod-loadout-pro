@@ -1,6 +1,6 @@
-import fs from 'fs/promises';
-import path from 'path';
-import crypto from 'crypto';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as crypto from 'crypto';
 
 interface CacheOptions {
   ttl?: number; // Time to live in milliseconds
