@@ -4,7 +4,14 @@ import { resolve } from 'path';
 
 // Vite config for building MCP widget components as UMD bundle
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxRuntime: 'classic',
+    }),
+  ],
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/mcp-widgets/index.tsx'),
