@@ -66,6 +66,32 @@ export interface SecondaryWeapon {
   attachments: string[];
 }
 
+// Error handling types
+export type ErrorType =
+  | 'WEAPON_NOT_FOUND'
+  | 'FIREBASE_CONNECTION_ERROR'
+  | 'ATTACHMENT_FETCH_ERROR'
+  | 'PERK_FETCH_ERROR'
+  | 'EQUIPMENT_FETCH_ERROR'
+  | 'UNKNOWN_ERROR';
+
+export interface ErrorState {
+  type: ErrorType;
+  message: string;
+  suggestions?: string[];
+}
+
+export interface PartialLoadInfo {
+  missingData: string[];
+  reason: string;
+}
+
+export interface Suggestion {
+  weaponName: string;
+  weaponId?: string;
+  similarity?: number;
+}
+
 export interface LoadoutData {
   loadout: {
     id?: string;
@@ -77,6 +103,10 @@ export interface LoadoutData {
     stats: WeaponStats;
     effectiveRange?: string;
     difficulty?: string;
+    // Error handling fields
+    isEmpty?: boolean;
+    errorState?: ErrorState;
+    partialLoad?: PartialLoadInfo;
   };
 }
 

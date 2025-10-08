@@ -13,7 +13,7 @@ export class LoadoutService {
     playstyle?: string;
     userId: string;
   }): Promise<Loadout> {
-    // Get the weapon
+    // Step 1: Fetch the weapon by ID or name
     let weapon: Weapon | null;
     if (params.weaponId) {
       weapon = await this.weaponService.getById(params.weaponId);
@@ -22,30 +22,37 @@ export class LoadoutService {
     }
 
     if (!weapon) {
-      throw new Error('Weapon not found');
+      // Step 2: If weapon not found, find similar weapons and throw structured error
+      const similarWeapons = await this.findSimilarWeapons(params.weaponName || params.weaponId || '');
+      const error = {
+        type: 'WEAPON_NOT_FOUND' as const,
+        message: `Weapon "${params.weaponName || params.weaponId}" not found in database`,
+        suggestions: similarWeapons.map(w => w.name)
+      };
+      throw error;
     }
 
-    // Get optimal attachments based on situation and playstyle
-    const attachments = await this.selectOptimalAttachments(
+    // Step 3: Build loadout components - attachments, perks, equipment
+    const { attachments, hadErrors: attachmentErrors } = await this.selectOptimalAttachments(
       weapon,
       params.situation,
       params.playstyle
     );
 
-    // Get optimal perks
+    // Select optimal perks for this weapon and playstyle
     const perks = await this.selectOptimalPerks(
       weapon,
       params.game || weapon.game,
       params.playstyle
     );
 
-    // Get optimal equipment
+    // Select optimal equipment for this playstyle
     const equipment = await this.selectOptimalEquipment(
       weapon,
       params.playstyle
     );
 
-    // Build the loadout
+    // Step 4: Assemble the complete loadout object
     const loadout: Loadout = {
       name: `${weapon.name} ${params.playstyle || 'Optimal'} Build`,
       game: params.game || weapon.game,
@@ -61,7 +68,8 @@ export class LoadoutService {
       difficulty: this.calculateDifficulty(weapon) as "Easy" | "Medium" | "Hard",
       description: this.generateDescription(weapon, attachments, params),
       tips: this.generateTips(weapon, params.playstyle),
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      hadAttachmentErrors: attachmentErrors
     };
 
     return loadout;
@@ -71,39 +79,63 @@ export class LoadoutService {
     weapon: Weapon,
     situation?: string,
     playstyle?: string
-  ): Promise<Attachment[]> {
+  ): Promise<{ attachments: Attachment[], hadErrors: boolean }> {
     const attachments: Attachment[] = [];
+    let hadErrors = false;
 
-    // Define attachment priorities based on playstyle
+    // Get attachment priorities based on playstyle (Aggressive, Tactical, Sniper, Support)
     const priorities = this.getAttachmentPriorities(playstyle);
 
-    // Select best attachment for each slot
+    // Iterate through weapon's attachment slots and select optimal attachments
     for (const [slot, availableIds] of Object.entries(weapon.attachmentSlots)) {
       if (!availableIds || availableIds.length === 0) continue;
 
-      // Fetch all attachments for this slot
-      const slotAttachments = await Promise.all(
-        availableIds.map(async (id: string) => {
-          const doc = await db().collection('attachments').doc(id).get();
-          return { id: doc.id, ...doc.data() } as Attachment;
-        })
-      );
+      try {
+        // Fetch all attachments for this slot with graceful error handling
+        const slotAttachments = await Promise.all(
+          availableIds.map(async (id: string) => {
+            try {
+              const doc = await db().collection('attachments').doc(id).get();
+              if (!doc.exists) {
+                console.error(`[get_loadout] Attachment document ${id} does not exist`);
+                return null;
+              }
+              return { id: doc.id, ...doc.data() } as Attachment;
+            } catch (err) {
+              console.error(`[get_loadout] Error fetching attachment ${id}:`, err);
+              hadErrors = true;
+              return null;
+            }
+          })
+        );
 
-      // Score each attachment based on priorities
-      const scored = slotAttachments.map(att => ({
-        attachment: att,
-        score: this.scoreAttachment(att, priorities)
-      }));
+        // Filter out null results
+        const validAttachments = slotAttachments.filter((att): att is Attachment => att !== null);
 
-      // Pick the best one
-      scored.sort((a, b) => b.score - a.score);
-      if (scored[0]) {
-        attachments.push(scored[0].attachment);
+        if (validAttachments.length === 0) {
+          console.warn(`[get_loadout] No valid attachments found for slot ${slot}`);
+          continue;
+        }
+
+        // Score each attachment based on priorities
+        const scored = validAttachments.map(att => ({
+          attachment: att,
+          score: this.scoreAttachment(att, priorities)
+        }));
+
+        // Pick the best one
+        scored.sort((a, b) => b.score - a.score);
+        if (scored[0]) {
+          attachments.push(scored[0].attachment);
+        }
+      } catch (err) {
+        console.error(`[get_loadout] Error processing slot ${slot}:`, err);
+        hadErrors = true;
       }
     }
 
     // Limit to 5 attachments (CoD standard)
-    return attachments.slice(0, 5);
+    return { attachments: attachments.slice(0, 5), hadErrors };
   }
 
   private getAttachmentPriorities(playstyle?: string): any {
@@ -133,18 +165,25 @@ export class LoadoutService {
     game: string,
     playstyle?: string
   ): Promise<any> {
-    // Load perks for the game
-    const perksSnapshot = await db()
-      .collection('perks')
-      .where('game', '==', game)
-      .get();
+    try {
+      // Attempt to load perks from Firebase for the specified game
+      const perksSnapshot = await db()
+        .collection('perks')
+        .where('game', '==', game)
+        .get();
 
-    const allPerks = perksSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+      const allPerks = perksSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-    // Select perks based on playstyle
+      console.log(`[get_loadout] Loaded ${allPerks.length} perks for ${game}`);
+    } catch (err) {
+      console.error('[get_loadout] Error loading perks from Firebase:', err);
+      // Gracefully continue with default perks if Firebase fails
+    }
+
+    // Return perk configuration based on playstyle
     const perkSelection: any = {};
 
     if (playstyle === 'Aggressive') {
@@ -289,5 +328,34 @@ export class LoadoutService {
     }
 
     return alternatives;
+  }
+
+  /**
+   * Finds similar weapons when exact match fails
+   * Uses case-insensitive partial string matching to suggest alternatives
+   */
+  private async findSimilarWeapons(searchTerm: string): Promise<Weapon[]> {
+    try {
+      console.log(`[get_loadout] Searching for similar weapons to: ${searchTerm}`);
+      const searchLower = searchTerm.toLowerCase();
+
+      // Get all weapons from the database
+      const snapshot = await db().collection('weapons').limit(50).get();
+
+      const weapons = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Weapon))
+        .filter(weapon => {
+          // Check if weapon name contains search term or vice versa
+          const weaponLower = weapon.name.toLowerCase();
+          return weaponLower.includes(searchLower) || searchLower.includes(weaponLower);
+        })
+        .slice(0, 5); // Return top 5 matches
+
+      console.log(`[get_loadout] Found ${weapons.length} similar weapons`);
+      return weapons;
+    } catch (err) {
+      console.error('[get_loadout] Error finding similar weapons:', err);
+      return [];
+    }
   }
 }

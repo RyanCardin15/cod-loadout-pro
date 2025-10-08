@@ -112,6 +112,9 @@ export interface Loadout {
 
   description?: string;
   tips?: string[];
+
+  // Error tracking
+  hadAttachmentErrors?: boolean;
 }
 
 export interface UserProfile {

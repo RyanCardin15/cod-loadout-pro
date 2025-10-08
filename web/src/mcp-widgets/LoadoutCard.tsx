@@ -44,12 +44,97 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
     );
   };
 
+  // Loading state
   if (!loadout) {
     return (
       <div className="bg-cod-black text-white p-6">
         <div className="animate-pulse">
           <div className="h-8 bg-cod-gray rounded w-3/4 mb-4"></div>
           <div className="h-32 bg-cod-gray rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - weapon not found
+  if (loadout.isEmpty && loadout.errorState?.type === 'WEAPON_NOT_FOUND') {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-cod-orange mb-6">
+          🎮 LOADOUT BUILDER
+        </h1>
+        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-bold text-gray-300 mb-2">
+            Weapon Not Found
+          </h3>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            {loadout.errorState.message}
+          </p>
+          {loadout.errorState.suggestions && loadout.errorState.suggestions.length > 0 && (
+            <div className="mt-6 text-left max-w-md mx-auto bg-cod-black/50 rounded-lg p-4">
+              <p className="text-cod-orange font-semibold mb-3 text-sm uppercase tracking-wide">
+                Did you mean one of these?
+              </p>
+              <div className="space-y-2">
+                {loadout.errorState.suggestions.map((suggestion, idx) => (
+                  <div
+                    key={idx}
+                    className="text-white text-sm flex items-center gap-2 hover:text-cod-orange transition-colors cursor-pointer"
+                  >
+                    <span className="text-cod-orange">•</span>
+                    {suggestion}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - Firebase connection error
+  if (loadout.isEmpty && loadout.errorState?.type === 'FIREBASE_CONNECTION_ERROR') {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-cod-orange mb-6">
+          🎮 LOADOUT BUILDER
+        </h1>
+        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-bold text-gray-300 mb-2">
+            Connection Error
+          </h3>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            {loadout.errorState.message}
+          </p>
+          <div className="inline-block px-6 py-3 bg-cod-orange/20 border border-cod-orange/50 rounded-lg text-cod-orange font-semibold hover:bg-cod-orange/30 transition-colors cursor-pointer">
+            Try Again
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state - unknown error
+  if (loadout.isEmpty && loadout.errorState) {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-cod-orange mb-6">
+          🎮 LOADOUT BUILDER
+        </h1>
+        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h3 className="text-xl font-bold text-gray-300 mb-2">
+            Something Went Wrong
+          </h3>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            {loadout.errorState.message}
+          </p>
+          <p className="text-gray-500 text-sm">
+            Please try again or contact support if the issue persists.
+          </p>
         </div>
       </div>
     );
@@ -73,6 +158,28 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
         )}
       </div>
 
+      {/* Partial Load Warning Banner */}
+      {loadout.partialLoad && (
+        <div className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-yellow-500 text-2xl">⚠️</span>
+            <div className="flex-1">
+              <h3 className="text-yellow-400 font-semibold mb-1">
+                Partial Data Loaded
+              </h3>
+              <p className="text-yellow-200/80 text-sm">
+                {loadout.partialLoad.reason}
+              </p>
+              {loadout.partialLoad.missingData && loadout.partialLoad.missingData.length > 0 && (
+                <p className="text-yellow-200/60 text-xs mt-2">
+                  Missing: {loadout.partialLoad.missingData.join(', ')}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Primary Weapon */}
       <div className="mb-6 bg-cod-gray border border-cod-orange/30 rounded-lg p-5">
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-700">
@@ -86,11 +193,11 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
         </div>
 
         {/* Attachments */}
-        {loadout.primary.attachments && loadout.primary.attachments.length > 0 && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wide text-cod-orange font-semibold mb-3">
-              Attachments
-            </h3>
+        <div>
+          <h3 className="text-xs uppercase tracking-wide text-cod-orange font-semibold mb-3">
+            Attachments
+          </h3>
+          {loadout.primary.attachments && loadout.primary.attachments.length > 0 ? (
             <div className="grid grid-cols-1 gap-2">
               {loadout.primary.attachments.map((attachment, index) => (
                 <div
@@ -104,8 +211,12 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-cod-black/30 border border-gray-700 rounded-lg p-4 text-center">
+              <p className="text-gray-500 text-sm">No attachments available</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Secondary Weapon */}
@@ -138,11 +249,11 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
       {/* Perks & Equipment */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Perks */}
-        {loadout.perks && Object.keys(loadout.perks).length > 0 && (
-          <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
-            <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
-              <span>⚡</span> Perks
-            </h3>
+        <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
+          <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
+            <span>⚡</span> Perks
+          </h3>
+          {loadout.perks && Object.keys(loadout.perks).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(loadout.perks).map(([slot, perk], index) => (
                 <div key={index} className="flex items-start gap-2">
@@ -153,15 +264,19 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-cod-black/30 border border-gray-700 rounded-lg p-4 text-center">
+              <p className="text-gray-500 text-sm">No perks configured</p>
+            </div>
+          )}
+        </div>
 
         {/* Equipment */}
-        {loadout.equipment && Object.keys(loadout.equipment).length > 0 && (
-          <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
-            <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
-              <span>💣</span> Equipment
-            </h3>
+        <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
+          <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
+            <span>💣</span> Equipment
+          </h3>
+          {loadout.equipment && Object.keys(loadout.equipment).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(loadout.equipment).map(([slot, item], index) => (
                 <div key={index} className="flex items-start gap-2">
@@ -172,8 +287,12 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-cod-black/30 border border-gray-700 rounded-lg p-4 text-center">
+              <p className="text-gray-500 text-sm">No equipment configured</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Final Stats */}
