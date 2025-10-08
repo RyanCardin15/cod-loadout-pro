@@ -17,6 +17,7 @@ initializeFirebase();
 
 class VercelMCPHandler {
   private server: Server;
+  private currentUserId: string | null = null;
 
   constructor() {
     this.server = new Server(
@@ -33,6 +34,10 @@ class VercelMCPHandler {
     );
 
     this.setupHandlers();
+  }
+
+  setUserId(userId: string | null) {
+    this.currentUserId = userId;
   }
 
   private setupHandlers() {
@@ -61,10 +66,10 @@ class VercelMCPHandler {
       }
 
       try {
-        // Get userId from the handler context (passed from the main handler)
+        // Get userId from the handler instance
         const context = {
-          userId: (this as any).userId || request.meta?.userId || 'anonymous',
-          sessionId: request.meta?.sessionId || 'default',
+          userId: this.currentUserId || request.params._meta?.userId || 'anonymous',
+          sessionId: request.params._meta?.sessionId || 'default',
         };
 
         const result = await tool.execute(args, context);
@@ -176,8 +181,8 @@ class VercelMCPHandler {
 
       try {
         const context = {
-          userId: userId || request.meta?.userId || 'anonymous',
-          sessionId: request.meta?.sessionId || 'default',
+          userId: this.currentUserId || request.params._meta?.userId || 'anonymous',
+          sessionId: request.params._meta?.sessionId || 'default',
         };
 
         const result = await tool.execute(args, context);
@@ -335,6 +340,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const body = typeof rawBody === 'string' && rawBody.length > 0
         ? JSON.parse(rawBody)
         : (rawBody ?? {});
+
+      // Set user ID for this request
+      mcpHandler.setUserId(userId);
 
       const result = await mcpHandler.handleRequest(body);
       return res.status(200).json(result);
