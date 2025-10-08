@@ -1,10 +1,30 @@
 'use client';
 
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Users } from 'lucide-react';
-import { TierBadge } from './TierBadge';
-import { cn } from '@/lib/utils/cn';
 
+import { cn } from '@/lib/utils/cn';
+import { TierBadge } from './TierBadge';
+
+/**
+ * Weapon Card Component
+ *
+ * Interactive card displaying weapon information including stats, tier, and meta data.
+ * Features smooth hover animations and displays key weapon metrics visually.
+ *
+ * @param weapon - Complete weapon data object
+ * @param onClick - Optional click handler for weapon selection
+ * @param className - Optional additional CSS classes
+ *
+ * @example
+ * ```tsx
+ * <WeaponCard
+ *   weapon={weaponData}
+ *   onClick={() => navigateToWeapon(weaponData.id)}
+ * />
+ * ```
+ */
 interface WeaponCardProps {
   weapon: {
     id: string;
@@ -30,7 +50,7 @@ interface WeaponCardProps {
   className?: string;
 }
 
-export function WeaponCard({ weapon, onClick, className }: WeaponCardProps) {
+function WeaponCardComponent({ weapon, onClick, className }: WeaponCardProps) {
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -5 }}
@@ -101,3 +121,10 @@ export function WeaponCard({ weapon, onClick, className }: WeaponCardProps) {
     </motion.div>
   );
 }
+
+/**
+ * Memoized WeaponCard for optimal performance
+ * Prevents unnecessary re-renders when weapon data hasn't changed
+ */
+export const WeaponCard = memo(WeaponCardComponent);
+WeaponCard.displayName = 'WeaponCard';

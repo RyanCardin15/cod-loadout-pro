@@ -1,8 +1,31 @@
 'use client';
 
+import { memo } from 'react';
 import { Search, X } from 'lucide-react';
+
 import { cn } from '@/lib/utils/cn';
 
+/**
+ * Search Bar Component
+ *
+ * Styled search input with search icon and optional clear button.
+ * Features focus state with orange ring matching app theme.
+ *
+ * @param value - Current search value
+ * @param onChange - Handler for value changes
+ * @param placeholder - Placeholder text (default: 'Search...')
+ * @param className - Optional additional CSS classes
+ *
+ * @example
+ * ```tsx
+ * const [search, setSearch] = useState('');
+ * <SearchBar
+ *   value={search}
+ *   onChange={setSearch}
+ *   placeholder="Search weapons..."
+ * />
+ * ```
+ */
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
@@ -10,7 +33,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-export function SearchBar({
+function SearchBarComponent({
   value,
   onChange,
   placeholder = 'Search...',
@@ -37,3 +60,10 @@ export function SearchBar({
     </div>
   );
 }
+
+/**
+ * Memoized SearchBar for optimal performance
+ * Prevents unnecessary re-renders when props haven't changed
+ */
+export const SearchBar = memo(SearchBarComponent);
+SearchBar.displayName = 'SearchBar';
