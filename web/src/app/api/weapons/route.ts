@@ -4,6 +4,7 @@ import { InternalServerError, ServiceUnavailableError } from '@/lib/api/errors';
 import { createSuccessResponse, validateQuery } from '@/lib/api/middleware';
 import { RATE_LIMITS, withRateLimit } from '@/lib/api/rateLimit';
 import { db, FirebaseAdminError } from '@/lib/firebase/admin';
+import { normalizeWeapons } from '@/lib/utils/weapon-normalizer';
 import { weaponQuerySchema } from '@/lib/validation/schemas';
 import type { WeaponsResponse } from '@/types';
 
@@ -39,10 +40,13 @@ export const GET = withRateLimit(
       weaponQuery = weaponQuery.orderBy('meta.popularity', 'desc').limit(limit);
 
       const snapshot = await weaponQuery.get();
-      const weapons = snapshot.docs.map((doc: any) => ({
+      const rawWeapons = snapshot.docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
+      // Normalize V3 MultiSourceField objects to V1 primitives for backward compatibility
+      const weapons = normalizeWeapons(rawWeapons);
 
       const response: WeaponsResponse = { weapons };
       return createSuccessResponse(response);

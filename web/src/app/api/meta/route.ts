@@ -3,6 +3,7 @@ import { db, FirebaseAdminError } from '@/lib/firebase/admin';
 import { validateQuery, handleApiError } from '@/lib/utils/validation';
 import { metaQuerySchema } from '@/lib/validation/schemas';
 import type { MetaResponse } from '@/types';
+import { normalizeWeapons } from '@/lib/utils/weapon-normalizer';
 
 // Force dynamic rendering to prevent static generation during build
 export const dynamic = 'force-dynamic';
@@ -30,12 +31,15 @@ export async function GET(request: NextRequest) {
         .limit(50)
         .get();
 
-      const weapons = weaponsSnapshot.docs.map(doc => ({
+      const rawWeapons = weaponsSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as any[];
 
-      // Group weapons by tier
+      // Normalize V3 to V1 before grouping by tier
+      const weapons = normalizeWeapons(rawWeapons);
+
+      // Group weapons by tier (now safe!)
       const tiers = {
         S: weapons.filter(w => w.meta.tier === 'S'),
         A: weapons.filter(w => w.meta.tier === 'A'),
@@ -84,9 +88,11 @@ export async function GET(request: NextRequest) {
           const weaponDocs = await Promise.all(
             weaponIds.map(id => db().collection('weapons').doc(id).get())
           );
-          enrichedTiers[tier] = weaponDocs
+          const rawEnrichedWeapons = weaponDocs
             .filter(doc => doc.exists)
-            .map(doc => ({ id: doc.id, ...doc.data() }));
+            .map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+          // Normalize before adding to tiers
+          enrichedTiers[tier] = normalizeWeapons(rawEnrichedWeapons);
         } else {
           enrichedTiers[tier] = weaponArray;
         }

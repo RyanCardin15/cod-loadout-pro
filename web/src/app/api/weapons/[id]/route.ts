@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
 import { logger } from '@/lib/logger';
 import { validateIdParam } from '@/lib/validation/route-params';
+import { normalizeWeapon } from '@/lib/utils/weapon-normalizer';
 
 // Force dynamic rendering to prevent static generation during build
 export const dynamic = 'force-dynamic';
@@ -26,10 +27,13 @@ export async function GET(
       );
     }
 
-    const weapon = {
+    const rawWeapon = {
       id: doc.id,
       ...doc.data(),
     };
+
+    // Normalize V3 MultiSourceField objects to V1 primitives
+    const weapon = normalizeWeapon(rawWeapon as any);
 
     return NextResponse.json({ weapon });
   } catch (error) {

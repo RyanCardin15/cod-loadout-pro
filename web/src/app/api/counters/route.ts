@@ -3,6 +3,7 @@ import { db } from '@/lib/firebase/admin';
 import { logger } from '@/lib/logger';
 import { validateQuery, handleApiError } from '@/lib/utils/validation';
 import { counterQuerySchema } from '@/lib/validation/schemas';
+import { normalizeWeapon, normalizeWeapons } from '@/lib/utils/weapon-normalizer';
 
 // Force dynamic rendering to prevent static generation during build
 export const dynamic = 'force-dynamic';
@@ -22,7 +23,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const enemyWeapon = { id: weaponDoc.id, ...weaponDoc.data() } as any;
+    const rawEnemyWeapon = { id: weaponDoc.id, ...weaponDoc.data() } as any;
+    // Normalize V3 to V1 for safe stats access
+    const enemyWeapon = normalizeWeapon(rawEnemyWeapon);
 
     // Analyze weapon strengths and weaknesses based on stats
     const strengths: string[] = [];
@@ -47,7 +50,9 @@ export async function GET(request: NextRequest) {
       .limit(50);
 
     const counterSnapshot = await counterQuery.get();
-    const allWeapons = counterSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }) as any);
+    const rawWeapons = counterSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }) as any);
+    // Normalize all weapons for safe stats access
+    const allWeapons = normalizeWeapons(rawWeapons);
 
     // Score each weapon as a counter
     const counterWeapons = allWeapons
