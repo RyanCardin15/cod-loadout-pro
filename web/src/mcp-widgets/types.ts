@@ -30,9 +30,18 @@ export interface TierData {
   D: Weapon[];
 }
 
+export interface TopLoadout {
+  id: string;
+  name: string;
+  primaryWeapon: string;
+  secondaryWeapon?: string;
+  popularity: number;
+  winRate?: number;
+}
+
 export interface MetaTierListData {
   tiers: TierData;
-  topLoadouts?: any[];
+  topLoadouts?: TopLoadout[];
   recentChanges?: string[];
   lastUpdated?: string;
 }

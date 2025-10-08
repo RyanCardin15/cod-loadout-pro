@@ -1,25 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Swords, TrendingUp, Zap, Target, Lightbulb, AlertTriangle } from 'lucide-react';
-import { CounterSuggestionsData, BaseWidgetProps } from './types';
+import { Swords, TrendingUp, Zap, Target, Lightbulb, AlertTriangle } from './icons';
+import { BaseWidgetProps } from './types';
 import { CounterSuggestionsSkeleton } from '@/components/shared/SkeletonLoader';
 import { ErrorCard } from '@/components/shared/ErrorCard';
 import { CopyWeaponButton } from '@/components/shared/CopyButton';
+import { useCounterSuggestionsData } from './hooks/useWidgetData';
+import { GlassCard } from './components/GlassCard';
+import { fadeInDown, fadeInUp, createListItemVariants, transitions } from './animations/variants';
+import { useReducedMotion } from './hooks/useReducedMotion';
 
-const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({ toolOutput }) => {
-  const [data, setData] = useState<CounterSuggestionsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const openai = (window as any).openai;
-    let rawData = toolOutput || openai?.toolOutput;
-    const extractedData = rawData?.structuredContent || rawData;
-
-    if (extractedData?.enemyWeapon) {
-      setData(extractedData);
-      setIsLoading(false);
-    }
-  }, [toolOutput]);
+const CounterSuggestions: React.FC<BaseWidgetProps<any>> = ({ toolOutput }) => {
+  const { data, isLoading } = useCounterSuggestionsData(toolOutput);
+  const prefersReducedMotion = useReducedMotion();
 
   // Enhanced loading state with skeleton
   if (isLoading || !data) {
@@ -32,8 +25,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
         <motion.h1
           className="text-3xl font-bold gradient-text-premium mb-6 flex items-center gap-3"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...(prefersReducedMotion ? {} : fadeInDown)}
         >
           <Swords className="w-8 h-8 text-cod-orange" /> COUNTER STRATEGIES
         </motion.h1>
@@ -52,8 +44,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
         <motion.h1
           className="text-3xl font-bold gradient-text-premium mb-6 flex items-center gap-3"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...(prefersReducedMotion ? {} : fadeInDown)}
         >
           <Swords className="w-8 h-8 text-cod-orange" /> COUNTER STRATEGIES
         </motion.h1>
@@ -71,8 +62,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
         <motion.h1
           className="text-3xl font-bold gradient-text-premium mb-6 flex items-center gap-3"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...(prefersReducedMotion ? {} : fadeInDown)}
         >
           <Swords className="w-8 h-8 text-cod-orange" /> COUNTER STRATEGIES
         </motion.h1>
@@ -92,8 +82,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
         <motion.h1
           className="text-3xl font-bold gradient-text-premium mb-6 flex items-center gap-3"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          {...(prefersReducedMotion ? {} : fadeInDown)}
         >
           <Swords className="w-8 h-8 text-cod-orange" /> COUNTER STRATEGIES
         </motion.h1>
@@ -112,8 +101,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
       {/* Header with gradient text */}
       <motion.div
         className="mb-6 pb-4 border-b border-gray-700"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        {...(prefersReducedMotion ? {} : fadeInDown)}
       >
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold gradient-text-premium mb-2 flex items-center gap-3">
@@ -129,11 +117,10 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
 
       {/* Partial Data Warning Banner */}
       {data.partialData && (
-        <motion.div
-          className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+        <GlassCard
+          variant="warning"
+          className="mb-6"
+          {...(prefersReducedMotion ? {} : { ...fadeInUp, transition: { delay: 0.1, ...transitions.normal } })}
         >
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0" />
@@ -146,19 +133,22 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
               </p>
             </div>
           </div>
-        </motion.div>
+        </GlassCard>
       )}
 
       {/* Enemy Analysis with micro-interactions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Strengths */}
-        <motion.div
-          className="bg-gradient-to-br from-red-900/20 to-red-900/10 backdrop-blur-xl border border-red-500/30 shadow-xl rounded-xl p-6 hover:border-red-500/60 transition-all duration-300 ripple"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.15 }}
-          whileHover={{ scale: 1.02, y: -5 }}
-          whileTap={{ scale: 0.98 }}
+        <GlassCard
+          variant="danger"
+          interactive
+          {...(prefersReducedMotion ? {} : {
+            initial: { opacity: 0, x: -20 },
+            animate: { opacity: 1, x: 0 },
+            transition: { delay: 0.15, ...transitions.normal },
+            whileHover: { scale: 1.02, y: -5 },
+            whileTap: { scale: 0.98 }
+          })}
           tabIndex={0}
           role="article"
           aria-label="Enemy strengths"
@@ -172,9 +162,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
                 <motion.li
                   key={index}
                   className="flex items-start gap-2 text-sm"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * index }}
+                  {...(prefersReducedMotion ? {} : createListItemVariants(index))}
                 >
                   <span className="text-red-400 mt-0.5">•</span>
                   <span className="text-gray-300">{strength}</span>
@@ -186,16 +174,19 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
               <p className="text-gray-500 text-sm">No significant strengths identified</p>
             </div>
           )}
-        </motion.div>
+        </GlassCard>
 
         {/* Weaknesses */}
-        <motion.div
-          className="bg-gradient-to-br from-green-900/20 to-green-900/10 backdrop-blur-xl border border-green-500/30 shadow-xl rounded-xl p-6 hover:border-green-500/60 transition-all duration-300 ripple"
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.02, y: -5 }}
-          whileTap={{ scale: 0.98 }}
+        <GlassCard
+          variant="success"
+          interactive
+          {...(prefersReducedMotion ? {} : {
+            initial: { opacity: 0, x: 20 },
+            animate: { opacity: 1, x: 0 },
+            transition: { delay: 0.2, ...transitions.normal },
+            whileHover: { scale: 1.02, y: -5 },
+            whileTap: { scale: 0.98 }
+          })}
           tabIndex={0}
           role="article"
           aria-label="Enemy weaknesses"
@@ -209,9 +200,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
                 <motion.li
                   key={index}
                   className="flex items-start gap-2 text-sm"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * index }}
+                  {...(prefersReducedMotion ? {} : createListItemVariants(index))}
                 >
                   <span className="text-green-400 mt-0.5">•</span>
                   <span className="text-gray-300">{weakness}</span>
@@ -223,30 +212,31 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
               <p className="text-gray-500 text-sm">No significant weaknesses identified</p>
             </div>
           )}
-        </motion.div>
+        </GlassCard>
       </div>
 
       {/* Top Counters with gradient text and copy */}
       {data.counterWeapons && data.counterWeapons.length > 0 && (
         <motion.div
           className="mb-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          {...(prefersReducedMotion ? {} : { ...fadeInUp, transition: { delay: 0.25, ...transitions.normal } })}
         >
           <h2 className="text-xl font-bold gradient-text-premium mb-4 flex items-center gap-2">
             <Target className="w-6 h-6 text-cod-orange" /> TOP COUNTER WEAPONS
           </h2>
           <div className="space-y-3">
             {data.counterWeapons.map((counter, index) => (
-              <motion.div
+              <GlassCard
                 key={index}
-                className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300 ripple"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 * index }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
+                variant="primary"
+                interactive
+                {...(prefersReducedMotion ? {} : {
+                  initial: { opacity: 0, y: 20 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { delay: 0.05 * index, ...transitions.normal },
+                  whileHover: { scale: 1.02, y: -5 },
+                  whileTap: { scale: 0.98 }
+                })}
                 tabIndex={0}
                 role="article"
                 aria-label={`Counter weapon ${index + 1}: ${counter.weaponName}`}
@@ -285,7 +275,6 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
                       animate={{ width: `${counter.effectiveness}%` }}
                       transition={{ duration: 0.8, ease: 'easeOut' }}
                     >
-                      {/* Shimmer overlay */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
                     </motion.div>
                   </div>
@@ -297,7 +286,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
                     {counter.reasoning}
                   </p>
                 )}
-              </motion.div>
+              </GlassCard>
             ))}
           </div>
         </motion.div>
@@ -305,13 +294,16 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
 
       {/* Counter Perks with enhanced interactions */}
       {data.counterPerks && data.counterPerks.length > 0 && (
-        <motion.div
-          className="mb-6 bg-gradient-to-br from-purple-900/20 to-purple-900/10 backdrop-blur-xl border border-purple-500/30 shadow-xl rounded-xl p-6 hover:border-purple-500/60 transition-all duration-300 ripple"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.02, y: -5 }}
-          whileTap={{ scale: 0.98 }}
+        <GlassCard
+          variant="accent"
+          interactive
+          className="mb-6 hover:border-purple-500/60"
+          {...(prefersReducedMotion ? {} : {
+            ...fadeInUp,
+            transition: { delay: 0.3, ...transitions.normal },
+            whileHover: { scale: 1.02, y: -5 },
+            whileTap: { scale: 0.98 }
+          })}
           tabIndex={0}
           role="article"
           aria-label="Recommended counter perks"
@@ -324,25 +316,26 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
               <motion.li
                 key={index}
                 className="flex items-start gap-2 text-sm"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * index }}
+                {...(prefersReducedMotion ? {} : createListItemVariants(index))}
               >
                 <span className="text-purple-400 mt-0.5">•</span>
                 <span className="text-gray-300">{perk}</span>
               </motion.li>
             ))}
           </ul>
-        </motion.div>
+        </GlassCard>
       )}
 
       {/* Key Strategies with gradient text */}
-      <motion.div
-        className="mb-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300 ripple"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-        whileTap={{ scale: 0.98 }}
+      <GlassCard
+        variant="primary"
+        interactive
+        className="mb-6"
+        {...(prefersReducedMotion ? {} : {
+          ...fadeInUp,
+          transition: { delay: 0.35, ...transitions.normal },
+          whileTap: { scale: 0.98 }
+        })}
         tabIndex={0}
         role="region"
         aria-label="Key strategies"
@@ -356,9 +349,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
               <motion.li
                 key={index}
                 className="flex items-start gap-3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * index }}
+                {...(prefersReducedMotion ? {} : createListItemVariants(index))}
               >
                 <span className="text-cod-orange font-bold mt-0.5">→</span>
                 <span className="text-white text-sm leading-relaxed">{strategy}</span>
@@ -370,16 +361,18 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
             <p className="text-gray-500 text-sm">No strategies available</p>
           </div>
         )}
-      </motion.div>
+      </GlassCard>
 
       {/* Tactical Advice with enhanced interactions */}
-      <motion.div
-        className="bg-gradient-to-br from-blue-900/20 to-blue-900/10 backdrop-blur-xl border border-blue-500/30 shadow-xl rounded-xl p-6 hover:border-blue-500/60 transition-all duration-300 ripple"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        whileHover={{ scale: 1.02, y: -5 }}
-        whileTap={{ scale: 0.98 }}
+      <GlassCard
+        variant="info"
+        interactive
+        {...(prefersReducedMotion ? {} : {
+          ...fadeInUp,
+          transition: { delay: 0.4, ...transitions.normal },
+          whileHover: { scale: 1.02, y: -5 },
+          whileTap: { scale: 0.98 }
+        })}
         tabIndex={0}
         role="article"
         aria-label="Tactical advice"
@@ -393,9 +386,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
               <motion.li
                 key={index}
                 className="flex items-start gap-2 text-sm"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * index }}
+                {...(prefersReducedMotion ? {} : createListItemVariants(index))}
               >
                 <span className="text-blue-400 mt-0.5">•</span>
                 <span className="text-gray-300">{advice}</span>
@@ -407,7 +398,7 @@ const CounterSuggestions: React.FC<BaseWidgetProps<CounterSuggestionsData>> = ({
             <p className="text-gray-500 text-sm">No tactical advice available</p>
           </div>
         )}
-      </motion.div>
+      </GlassCard>
     </div>
   );
 };
