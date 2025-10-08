@@ -2,14 +2,16 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Crosshair, SlidersHorizontal } from 'lucide-react';
-import { useWeapons, Weapon } from '@/hooks/useWeapons';
+import { Crosshair } from 'lucide-react';
+import { useWeapons } from '@/hooks/useWeapons';
+import { Weapon } from '@/types';
 import { WeaponCard } from '@/components/shared/WeaponCard';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { FilterPanel, FilterOptions } from '@/components/shared/FilterPanel';
 import { StatBars } from '@/components/shared/StatBars';
+import { RouteErrorBoundary } from '@/components/errors/RouteErrorBoundary';
 
-export default function WeaponsPage() {
+function WeaponsPageContent() {
   const { weapons, loading, error } = useWeapons();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions>({
@@ -267,7 +269,7 @@ export default function WeaponsPage() {
             <div>
               <h3 className="text-lg font-semibold text-white mb-3">Best For</h3>
               <div className="flex flex-wrap gap-2">
-                {selectedWeapon.bestFor.map((item) => (
+                {selectedWeapon.bestFor.map((item: string) => (
                   <span
                     key={item}
                     className="px-3 py-1.5 bg-cod-orange/20 border border-cod-orange/50 rounded-lg text-cod-orange text-sm font-medium"
@@ -281,5 +283,13 @@ export default function WeaponsPage() {
         </motion.div>
       )}
     </div>
+  );
+}
+
+export default function WeaponsPage() {
+  return (
+    <RouteErrorBoundary>
+      <WeaponsPageContent />
+    </RouteErrorBoundary>
   );
 }

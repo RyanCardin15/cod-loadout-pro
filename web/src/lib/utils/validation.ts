@@ -4,6 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodError } from 'zod';
+import { logger } from '@/lib/logger';
 
 export class ValidationError extends Error {
   constructor(
@@ -90,13 +91,13 @@ export function validationErrorResponse(error: ValidationError): NextResponse {
  * Generic error handler for API routes
  */
 export function handleApiError(error: unknown): NextResponse {
-  console.error('API Error:', error);
-
   if (error instanceof ValidationError) {
+    logger.warn('API validation error', { errors: error.errors });
     return validationErrorResponse(error);
   }
 
   if (error instanceof Error) {
+    logger.error('API error', { error, message: error.message });
     return NextResponse.json(
       {
         error: error.message || 'Internal server error',
@@ -105,6 +106,7 @@ export function handleApiError(error: unknown): NextResponse {
     );
   }
 
+  logger.error('Unknown API error', { error });
   return NextResponse.json(
     {
       error: 'Unknown error occurred',

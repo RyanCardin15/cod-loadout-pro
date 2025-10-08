@@ -34,7 +34,7 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
             />
           ) : (
             <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-cod-accent to-cod-accent-dark flex items-center justify-center text-white font-bold text-4xl border-4 border-cod-accent shadow-lg">
-              {(profile.displayName || user?.email || 'U')[0].toUpperCase()}
+              {(profile.displayName || user?.email || 'U')[0]?.toUpperCase() || 'U'}
             </div>
           )}
 

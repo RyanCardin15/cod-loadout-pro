@@ -63,7 +63,7 @@ export function UserMenu() {
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cod-accent to-cod-accent-dark flex items-center justify-center text-white font-semibold text-sm">
-            {(user.displayName || user.email || 'U')[0].toUpperCase()}
+            {(user?.displayName || user?.email || 'U')[0]?.toUpperCase() || 'U'}
           </div>
         )}
         <svg

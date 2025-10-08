@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
+import { logger } from '@/lib/logger';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -24,7 +25,7 @@ export async function GET(
 
     return NextResponse.json({ weapon });
   } catch (error) {
-    console.error('Error fetching weapon:', error);
+    logger.apiError('GET', `/api/weapons/${params.id}`, error);
     return NextResponse.json(
       { error: 'Failed to fetch weapon' },
       { status: 500 }

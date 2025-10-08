@@ -8,12 +8,13 @@ import { LoadoutCard } from '@/components/shared/LoadoutCard';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { RouteErrorBoundary } from '@/components/errors/RouteErrorBoundary';
 
 type Tab = 'my-loadouts' | 'community' | 'create';
 
-export default function LoadoutsPage() {
+function LoadoutsPageContent() {
   const { isAuthenticated } = useAuth();
-  const { loadouts, loading, error, deleteLoadout } = useLoadouts();
+  const { loadouts, loading, deleteLoadout } = useLoadouts();
   const [activeTab, setActiveTab] = useState<Tab>('my-loadouts');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -248,5 +249,13 @@ export default function LoadoutsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LoadoutsPage() {
+  return (
+    <RouteErrorBoundary>
+      <LoadoutsPageContent />
+    </RouteErrorBoundary>
   );
 }

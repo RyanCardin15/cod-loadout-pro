@@ -1,6 +1,13 @@
 /**
  * Centralized type exports
- * Import types from this barrel file for consistency
+ *
+ * This barrel file provides a single import point for all type definitions.
+ * Import types from here for consistency across the codebase.
+ *
+ * @example
+ * ```typescript
+ * import { Weapon, Loadout, MetaData } from '@/types';
+ * ```
  */
 
 // Weapon types
@@ -17,7 +24,7 @@ export type {
   AttachmentSlots,
   Weapon,
   WeaponSummary,
-} from './weapon';
+} from './weapons';
 
 // Loadout types
 export type {
@@ -28,7 +35,7 @@ export type {
   LoadoutEquipment,
   Loadout,
   CreateLoadoutInput,
-} from './loadout';
+} from './loadouts';
 
 // Meta types
 export type {
@@ -49,4 +56,7 @@ export type {
   LoadoutResponse,
   MetaResponse,
   SuccessResponse,
+  WeaponQueryParams,
+  LoadoutQueryParams,
+  MetaQueryParams,
 } from './api';

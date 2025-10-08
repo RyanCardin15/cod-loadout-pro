@@ -66,7 +66,6 @@ export function HeroEnhanced() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 300], [0, -100]);
   const y2 = useTransform(scrollY, [0, 300], [0, -50]);
   const opacity = useTransform(scrollY, [0, 200], [1, 0]);
 

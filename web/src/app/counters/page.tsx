@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Search, Target, Zap, AlertCircle } from 'lucide-react';
+import { Shield, Target, Zap, AlertCircle } from 'lucide-react';
 import { useCounters } from '@/hooks/useCounters';
 import { useWeapons } from '@/hooks/useWeapons';
 import { SearchBar } from '@/components/shared/SearchBar';

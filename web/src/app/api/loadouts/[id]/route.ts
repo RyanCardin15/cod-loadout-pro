@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
+import { logger } from '@/lib/logger';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -24,7 +25,7 @@ export async function GET(
 
     return NextResponse.json({ loadout });
   } catch (error) {
-    console.error('Error fetching loadout:', error);
+    logger.apiError('GET', `/api/loadouts/${params.id}`, error);
     return NextResponse.json(
       { error: 'Failed to fetch loadout' },
       { status: 500 }
@@ -33,7 +34,7 @@ export async function GET(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -46,7 +47,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error deleting loadout:', error);
+    logger.apiError('DELETE', `/api/loadouts/${params.id}`, error);
     return NextResponse.json(
       { error: 'Failed to delete loadout' },
       { status: 500 }
@@ -76,7 +77,7 @@ export async function PATCH(
       message: 'Loadout updated successfully'
     });
   } catch (error) {
-    console.error('Error updating loadout:', error);
+    logger.apiError('PATCH', `/api/loadouts/${params.id}`, error);
     return NextResponse.json(
       { error: 'Failed to update loadout' },
       { status: 500 }
