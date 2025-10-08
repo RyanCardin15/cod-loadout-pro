@@ -7,8 +7,8 @@ import MyLoadouts from './MyLoadouts';
 import PlaystyleProfile from './PlaystyleProfile';
 import WeaponList from './WeaponList';
 
-// Export all components as a global object
-export const CODLoadoutComponents = {
+// Export individual components for named exports
+export {
   React,
   ReactDOM,
   MetaTierList,
@@ -18,10 +18,3 @@ export const CODLoadoutComponents = {
   PlaystyleProfile,
   WeaponList,
 };
-
-// Attach to window for UMD usage
-if (typeof window !== 'undefined') {
-  (window as any).CODLoadoutComponents = CODLoadoutComponents;
-}
-
-export default CODLoadoutComponents;

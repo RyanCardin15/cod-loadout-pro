@@ -18,6 +18,7 @@ export default defineConfig({
         globals: {},
         // Inline React and ReactDOM into the bundle
         inlineDynamicImports: true,
+        exports: 'named',
       },
     },
     outDir: 'dist',
