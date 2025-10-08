@@ -319,11 +319,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       // OAuth discovery for ChatGPT
       oauth: {
-        authorization_endpoint: `${baseUrl}/api/oauth/authorize`,
-        token_endpoint: `${baseUrl}/api/oauth/token`,
-        revocation_endpoint: `${baseUrl}/api/oauth/revoke`,
-        registration_endpoint: `${baseUrl}/api/oauth/register`,
-        introspection_endpoint: `${baseUrl}/api/oauth/introspect`,
+        authorization_endpoint: `${baseUrl}/api/oauth-authorize`,
+        token_endpoint: `${baseUrl}/api/oauth-token`,
+        revocation_endpoint: `${baseUrl}/api/oauth-revoke`,
         issuer: baseUrl,
         scopes_supported: ['read', 'write', 'profile'],
         response_types_supported: ['code'],
