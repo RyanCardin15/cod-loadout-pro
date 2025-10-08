@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Crosshair, AlertTriangle, XCircle, Search, BarChart3 } from 'lucide-react';
 import { WeaponListData, BaseWidgetProps } from './types';
+import { cn } from '@/lib/utils';
 
 const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) => {
   const [data, setData] = useState<WeaponListData | null>(null);
@@ -16,11 +19,11 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
 
   const getTierColor = (tier?: string): string => {
     switch (tier) {
-      case 'S': return 'bg-yellow-500 text-black';
-      case 'A': return 'bg-green-500 text-white';
-      case 'B': return 'bg-blue-500 text-white';
-      case 'C': return 'bg-purple-500 text-white';
-      case 'D': return 'bg-gray-500 text-white';
+      case 'S': return 'bg-tier-S text-white neon-glow';
+      case 'A': return 'bg-tier-A text-white';
+      case 'B': return 'bg-tier-B text-black';
+      case 'C': return 'bg-tier-C text-black';
+      case 'D': return 'bg-tier-D text-white';
       default: return 'bg-gray-600 text-white';
     }
   };
@@ -33,11 +36,16 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
           <span className="text-gray-400 uppercase tracking-wide">{label}</span>
           <span className="text-cod-orange font-semibold">{value}</span>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-1.5">
-          <div
-            className="bg-gradient-to-r from-cod-orange to-yellow-500 h-1.5 rounded-full transition-all duration-500"
-            style={{ width: `${percentage}%` }}
-          />
+        <div className="w-full bg-gray-700 rounded-full h-1.5 relative overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-cod-orange to-yellow-500 rounded-full relative"
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          >
+            {/* Shimmer overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          </motion.div>
         </div>
       </div>
     );
@@ -61,15 +69,22 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
   if (data.isEmpty && data.errorState?.type === 'FIREBASE_CONNECTION_ERROR') {
     return (
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-cod-orange mb-6">
-          🔫 WEAPON SEARCH
-        </h1>
-        <div
-          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+        <motion.h1
+          className="text-3xl font-bold text-cod-orange mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Crosshair className="w-8 h-8" /> WEAPON SEARCH
+        </motion.h1>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-12 text-center hover:border-cod-orange transition-all duration-300"
           role="alert"
           aria-live="polite"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
         >
-          <div className="text-6xl mb-4" aria-hidden="true">⚠️</div>
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-yellow-500" aria-hidden="true" />
           <h3 className="text-xl font-bold text-gray-300 mb-2">
             Connection Error
           </h3>
@@ -84,7 +99,7 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
           >
             Try Again
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -93,15 +108,22 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
   if (data.isEmpty && data.errorState?.type === 'VALIDATION_ERROR') {
     return (
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-cod-orange mb-6">
-          🔫 WEAPON SEARCH
-        </h1>
-        <div
-          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+        <motion.h1
+          className="text-3xl font-bold text-cod-orange mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Crosshair className="w-8 h-8" /> WEAPON SEARCH
+        </motion.h1>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-12 text-center hover:border-cod-orange transition-all duration-300"
           role="alert"
           aria-live="polite"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
         >
-          <div className="text-6xl mb-4" aria-hidden="true">⚠️</div>
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-yellow-500" aria-hidden="true" />
           <h3 className="text-xl font-bold text-gray-300 mb-2">
             Invalid Search Parameters
           </h3>
@@ -111,7 +133,7 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
           <p className="text-gray-500 text-sm">
             Please check your search criteria and try again.
           </p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -120,15 +142,22 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
   if (data.isEmpty && data.errorState && data.errorState.type === 'UNKNOWN_ERROR') {
     return (
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-cod-orange mb-6">
-          🔫 WEAPON SEARCH
-        </h1>
-        <div
-          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+        <motion.h1
+          className="text-3xl font-bold text-cod-orange mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Crosshair className="w-8 h-8" /> WEAPON SEARCH
+        </motion.h1>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-12 text-center hover:border-cod-orange transition-all duration-300"
           role="alert"
           aria-live="polite"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
         >
-          <div className="text-6xl mb-4" aria-hidden="true">❌</div>
+          <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" aria-hidden="true" />
           <h3 className="text-xl font-bold text-gray-300 mb-2">
             Something Went Wrong
           </h3>
@@ -138,7 +167,7 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
           <p className="text-gray-500 text-sm">
             Please try again or contact support if the issue persists.
           </p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -147,15 +176,22 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
   if (!data.weapons || data.weapons.length === 0) {
     return (
       <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-cod-orange mb-6">
-          🔫 WEAPON SEARCH
-        </h1>
-        <div
-          className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center"
+        <motion.h1
+          className="text-3xl font-bold text-cod-orange mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Crosshair className="w-8 h-8" /> WEAPON SEARCH
+        </motion.h1>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-12 text-center hover:border-cod-orange transition-all duration-300"
           role="status"
           aria-live="polite"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
         >
-          <div className="text-6xl mb-4" aria-hidden="true">🔍</div>
+          <Search className="w-16 h-16 mx-auto mb-4 text-gray-400" aria-hidden="true" />
           <h3 className="text-xl font-bold text-gray-300 mb-2">
             No Weapons Found
           </h3>
@@ -210,7 +246,7 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -221,9 +257,13 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
   return (
     <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-cod-orange mb-2">
-          🔫 TOP {weapons.length} WEAPONS
+      <motion.div
+        className="mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="text-3xl font-bold text-cod-orange mb-2 flex items-center gap-3">
+          <Crosshair className="w-8 h-8" /> TOP {weapons.length} WEAPONS
         </h1>
         {Object.keys(filters).length > 0 && (
           <div className="flex gap-2 flex-wrap">
@@ -244,14 +284,18 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
             )}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Weapon Cards */}
       <div className="space-y-4">
         {weapons.map((weapon, index) => (
-          <div
+          <motion.div
             key={weapon?.id || index}
-            className="bg-cod-gray border border-cod-orange/30 rounded-lg p-5 hover:bg-cod-gray/70 transition-all duration-200 hover:scale-[1.02]"
+            className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 * index }}
+            whileHover={{ scale: 1.02, y: -5 }}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
@@ -263,7 +307,10 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
                     {weapon?.name || 'Unknown Weapon'}
                   </h3>
                   {weapon?.tier && (
-                    <span className={`${getTierColor(weapon.tier)} px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider`}>
+                    <span className={cn(
+                      "px-2.5 py-0.5 rounded text-xs font-bold uppercase tracking-wider",
+                      getTierColor(weapon.tier)
+                    )}>
                       {weapon.tier}-TIER
                     </span>
                   )}
@@ -315,24 +362,34 @@ const WeaponList: React.FC<BaseWidgetProps<WeaponListData>> = ({ toolOutput }) =
                   <span className="text-gray-400">Popularity</span>
                   <span className="text-cod-orange font-semibold">{weapon.popularity.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-cod-orange to-yellow-500 h-2 rounded-full"
-                    style={{ width: `${Math.min(weapon.popularity, 100)}%` }}
-                  />
+                <div className="w-full bg-gray-700 rounded-full h-2 relative overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cod-orange to-yellow-500 rounded-full relative"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(weapon.popularity, 100)}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                  >
+                    {/* Shimmer overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                  </motion.div>
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Footer Note */}
-      <div className="mt-6 p-4 bg-cod-gray/50 border border-cod-orange/20 rounded-lg">
-        <p className="text-xs text-gray-400 text-center">
-          💡 Stats based on competitive meta and community data
+      <motion.div
+        className="mt-6 p-4 bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-xl border border-white/10 shadow-xl rounded-lg"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-2">
+          <BarChart3 className="w-3 h-3" /> Stats based on competitive meta and community data
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

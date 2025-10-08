@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Gamepad2, Crosshair, Zap, Bomb, BarChart3, Search, AlertTriangle, XCircle } from 'lucide-react';
 import { LoadoutData, BaseWidgetProps } from './types';
 
 const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => {
@@ -34,11 +36,16 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
           <span className="text-gray-400 uppercase tracking-wide font-medium">{label}</span>
           <span className="text-cod-orange font-bold">{value}</span>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-2">
-          <div
-            className="bg-gradient-to-r from-cod-orange to-yellow-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${percentage}%` }}
-          />
+        <div className="w-full bg-gray-700 rounded-full h-2 relative overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-cod-orange to-yellow-500 rounded-full relative"
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+          >
+            {/* Shimmer overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          </motion.div>
         </div>
       </div>
     );
@@ -60,11 +67,20 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
   if (loadout.isEmpty && loadout.errorState?.type === 'WEAPON_NOT_FOUND') {
     return (
       <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-cod-orange mb-6">
-          🎮 LOADOUT BUILDER
-        </h1>
-        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center">
-          <div className="text-6xl mb-4">🔍</div>
+        <motion.h1
+          className="text-3xl font-bold text-cod-orange mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Gamepad2 className="w-8 h-8" /> LOADOUT BUILDER
+        </motion.h1>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-12 text-center hover:border-cod-orange transition-all duration-300"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Search className="w-16 h-16 mx-auto mb-4 text-gray-400" />
           <h3 className="text-xl font-bold text-gray-300 mb-2">
             Weapon Not Found
           </h3>
@@ -72,24 +88,33 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
             {loadout.errorState.message}
           </p>
           {loadout.errorState.suggestions && loadout.errorState.suggestions.length > 0 && (
-            <div className="mt-6 text-left max-w-md mx-auto bg-cod-black/50 rounded-lg p-4">
+            <motion.div
+              className="mt-6 text-left max-w-md mx-auto bg-cod-black/50 rounded-lg p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
               <p className="text-cod-orange font-semibold mb-3 text-sm uppercase tracking-wide">
                 Did you mean one of these?
               </p>
               <div className="space-y-2">
                 {loadout.errorState.suggestions.map((suggestion, idx) => (
-                  <div
+                  <motion.div
                     key={idx}
                     className="text-white text-sm flex items-center gap-2 hover:text-cod-orange transition-colors cursor-pointer"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 * idx }}
+                    whileHover={{ x: 5 }}
                   >
                     <span className="text-cod-orange">•</span>
                     {suggestion}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -98,11 +123,20 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
   if (loadout.isEmpty && loadout.errorState?.type === 'FIREBASE_CONNECTION_ERROR') {
     return (
       <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-cod-orange mb-6">
-          🎮 LOADOUT BUILDER
-        </h1>
-        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center">
-          <div className="text-6xl mb-4">⚠️</div>
+        <motion.h1
+          className="text-3xl font-bold text-cod-orange mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Gamepad2 className="w-8 h-8" /> LOADOUT BUILDER
+        </motion.h1>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-12 text-center hover:border-cod-orange transition-all duration-300"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-yellow-500" />
           <h3 className="text-xl font-bold text-gray-300 mb-2">
             Connection Error
           </h3>
@@ -112,7 +146,7 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
           <div className="inline-block px-6 py-3 bg-cod-orange/20 border border-cod-orange/50 rounded-lg text-cod-orange font-semibold hover:bg-cod-orange/30 transition-colors cursor-pointer">
             Try Again
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -121,11 +155,20 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
   if (loadout.isEmpty && loadout.errorState) {
     return (
       <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-cod-orange mb-6">
-          🎮 LOADOUT BUILDER
-        </h1>
-        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-12 text-center">
-          <div className="text-6xl mb-4">❌</div>
+        <motion.h1
+          className="text-3xl font-bold text-cod-orange mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Gamepad2 className="w-8 h-8" /> LOADOUT BUILDER
+        </motion.h1>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-12 text-center hover:border-cod-orange transition-all duration-300"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <XCircle className="w-16 h-16 mx-auto mb-4 text-red-500" />
           <h3 className="text-xl font-bold text-gray-300 mb-2">
             Something Went Wrong
           </h3>
@@ -135,7 +178,7 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
           <p className="text-gray-500 text-sm">
             Please try again or contact support if the issue persists.
           </p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -143,9 +186,13 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
   return (
     <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
       {/* Header */}
-      <div className="mb-6 pb-4 border-b border-gray-700">
-        <h1 className="text-3xl font-bold text-cod-orange mb-2">
-          🎮 {loadout.name}
+      <motion.div
+        className="mb-6 pb-4 border-b border-gray-700"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="text-3xl font-bold text-cod-orange mb-2 flex items-center gap-3">
+          <Gamepad2 className="w-8 h-8" /> {loadout.name}
         </h1>
         {loadout.difficulty && (
           <div className="flex items-center gap-2 text-sm">
@@ -156,13 +203,18 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
             <span className="text-gray-500">{loadout.difficulty}</span>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Partial Load Warning Banner */}
       {loadout.partialLoad && (
-        <div className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4">
+        <motion.div
+          className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <div className="flex items-start gap-3">
-            <span className="text-yellow-500 text-2xl">⚠️</span>
+            <AlertTriangle className="w-6 h-6 text-yellow-500 flex-shrink-0" />
             <div className="flex-1">
               <h3 className="text-yellow-400 font-semibold mb-1">
                 Partial Data Loaded
@@ -177,13 +229,19 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Primary Weapon */}
-      <div className="mb-6 bg-cod-gray border border-cod-orange/30 rounded-lg p-5">
+      <motion.div
+        className="mb-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        whileHover={{ scale: 1.02, y: -5 }}
+      >
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-700">
-          <span className="text-2xl">🔫</span>
+          <Crosshair className="w-6 h-6 text-cod-orange" />
           <div>
             <h2 className="text-xl font-bold text-white">
               {loadout.primary.weaponName}
@@ -200,15 +258,19 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
           {loadout.primary.attachments && loadout.primary.attachments.length > 0 ? (
             <div className="grid grid-cols-1 gap-2">
               {loadout.primary.attachments.map((attachment, index) => (
-                <div
+                <motion.div
                   key={index}
                   className="flex items-center gap-3 bg-cod-black/50 rounded px-3 py-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.05 * index }}
+                  whileHover={{ x: 5 }}
                 >
                   <span className="text-cod-orange font-semibold text-xs uppercase w-16">
                     {attachment.slot}
                   </span>
                   <span className="text-white text-sm">{attachment.name}</span>
-                </div>
+                </motion.div>
               ))}
             </div>
           ) : (
@@ -217,13 +279,19 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Secondary Weapon */}
       {loadout.secondary && (
-        <div className="mb-6 bg-cod-gray border border-cod-orange/20 rounded-lg p-5">
+        <motion.div
+          className="mb-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange/60 transition-all duration-300"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+        >
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xl">🔫</span>
+            <Crosshair className="w-5 h-5 text-cod-orange" />
             <div>
               <h2 className="text-lg font-bold text-white">
                 {loadout.secondary.weaponName}
@@ -243,15 +311,21 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Perks & Equipment */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Perks */}
-        <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-purple-500/60 transition-all duration-300"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.25 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+        >
           <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
-            <span>⚡</span> Perks
+            <Zap className="w-4 h-4" /> Perks
           </h3>
           {loadout.perks && Object.keys(loadout.perks).length > 0 ? (
             <div className="space-y-2">
@@ -269,12 +343,18 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
               <p className="text-gray-500 text-sm">No perks configured</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Equipment */}
-        <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-red-500/60 transition-all duration-300"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+        >
           <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
-            <span>💣</span> Equipment
+            <Bomb className="w-4 h-4" /> Equipment
           </h3>
           {loadout.equipment && Object.keys(loadout.equipment).length > 0 ? (
             <div className="space-y-2">
@@ -292,14 +372,19 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
               <p className="text-gray-500 text-sm">No equipment configured</p>
             </div>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {/* Final Stats */}
       {loadout.stats && (
-        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-5">
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+        >
           <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-4 flex items-center gap-2">
-            <span>📊</span> Final Stats
+            <BarChart3 className="w-4 h-4" /> Final Stats
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             {getStatBar(loadout.stats.mobility, 'Mobility', true)}
@@ -321,15 +406,20 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
               )}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Footer */}
-      <div className="mt-6 p-3 bg-cod-gray/50 border border-cod-orange/10 rounded-lg">
-        <p className="text-xs text-gray-400 text-center">
-          💡 Optimized for competitive play • Adjust to your playstyle
+      <motion.div
+        className="mt-6 p-3 bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-xl border border-white/10 shadow-xl rounded-lg"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-2">
+          <Zap className="w-3 h-3" /> Optimized for competitive play • Adjust to your playstyle
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

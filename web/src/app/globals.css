@@ -346,4 +346,9 @@
   .hover-tilt:hover {
     transform: perspective(1000px) rotateY(5deg);
   }
+
+  /* Shimmer animation for progress bars */
+  .animate-shimmer {
+    animation: shimmer 3s infinite;
+  }
 }
