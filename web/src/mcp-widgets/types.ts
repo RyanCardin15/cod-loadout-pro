@@ -69,6 +69,8 @@ export interface SecondaryWeapon {
 // Error handling types
 export type ErrorType =
   | 'WEAPON_NOT_FOUND'
+  | 'ENEMY_WEAPON_NOT_FOUND'
+  | 'NO_COUNTERS_FOUND'
   | 'FIREBASE_CONNECTION_ERROR'
   | 'ATTACHMENT_FETCH_ERROR'
   | 'PERK_FETCH_ERROR'
@@ -131,6 +133,12 @@ export interface CounterSuggestionsData {
   counterWeapons: CounterWeapon[];
   strategies: string[];
   tacticalAdvice: string[];
+  counterPerks?: string[];
+  threatLevel?: string;
+  // Error handling fields
+  isEmpty?: boolean;
+  errorState?: ErrorState;
+  partialData?: boolean;
 }
 
 // MyLoadouts types
