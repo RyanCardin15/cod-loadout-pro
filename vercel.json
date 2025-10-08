@@ -10,7 +10,19 @@
       "use": "@vercel/node"
     },
     {
-      "src": "api/oauth.ts",
+      "src": "api/oauth-discovery.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/oauth-authorize.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/oauth-token.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/oauth-revoke.ts",
       "use": "@vercel/node"
     },
     {
@@ -28,8 +40,20 @@
       "dest": "/api/mcp.ts"
     },
     {
-      "src": "/api/oauth(.*)",
-      "dest": "/api/oauth.ts"
+      "src": "/api/oauth/.well-known/oauth-authorization-server",
+      "dest": "/api/oauth-discovery.ts"
+    },
+    {
+      "src": "/api/oauth/authorize",
+      "dest": "/api/oauth-authorize.ts"
+    },
+    {
+      "src": "/api/oauth/token",
+      "dest": "/api/oauth-token.ts"
+    },
+    {
+      "src": "/api/oauth/revoke",
+      "dest": "/api/oauth-revoke.ts"
     },
     {
       "src": "/api/oauth-associate",
