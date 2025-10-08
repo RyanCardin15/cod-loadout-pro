@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+import 'dotenv/config';
 
 /**
  * Weapon Schema Migration Orchestrator
@@ -212,13 +213,15 @@ async function migrateWeapon(
       }
     }
 
-    // Final validation
-    const validation = validateWeapon(migratedWeapon);
-    if (!validation.valid) {
-      return {
-        success: false,
-        error: `Validation failed: ${validation.errors.join(', ')}`,
-      };
+    // Final validation (only for V1 and V2, V3 already validated above)
+    if (targetVersion !== 'v3') {
+      const validation = validateWeapon(migratedWeapon);
+      if (!validation.valid) {
+        return {
+          success: false,
+          error: `Validation failed: ${validation.errors.join(', ')}`,
+        };
+      }
     }
 
     return { success: true, migrated: migratedWeapon };
@@ -262,7 +265,7 @@ async function processBatch(
     if (!migrationResult.success) {
       result.errors++;
       result.errorDetails.push({
-        weaponId: weapon.id,
+        weaponId: weapon._firestoreDocId,
         weaponName: weapon.name,
         error: migrationResult.error || 'Unknown error',
       });
@@ -280,14 +283,29 @@ async function processBatch(
     if (!options.dryRun && migrationResult.migrated) {
       try {
         const firestore = db();
+
+        // Debug: Log the structure being written for first weapon
+        if (options.verbose && result.migrated === 0) {
+          console.log('\n🔍 DEBUG: First migrated weapon structure:');
+          console.log('Firestore Doc ID:', weapon._firestoreDocId);
+          console.log('Weapon Name:', weapon.name);
+          console.log('Stats.damage type:', typeof migrationResult.migrated.stats?.damage);
+          console.log('Stats.damage value:', JSON.stringify(migrationResult.migrated.stats?.damage, null, 2));
+          console.log('Has lineageMetadata?', !!migrationResult.migrated.lineageMetadata);
+          console.log('SchemaVersion:', migrationResult.migrated.schemaVersion);
+          console.log('\n');
+        }
+
+        // Use .set() without merge to completely replace the document with V3 structure
+        // Use the Firestore document ID, not the internal id field
         await firestore
           .collection('weapons')
-          .doc(weapon.id)
-          .set(migrationResult.migrated, { merge: true });
+          .doc(weapon._firestoreDocId)
+          .set(migrationResult.migrated);
 
         // Record migration in history
         const migrationRecord: MigrationRecord = {
-          weaponId: weapon.id,
+          weaponId: weapon._firestoreDocId,
           weaponName: weapon.name,
           fromVersion: currentVersion,
           toVersion: targetVersion,
@@ -300,7 +318,7 @@ async function processBatch(
       } catch (error) {
         result.errors++;
         result.errorDetails.push({
-          weaponId: weapon.id,
+          weaponId: weapon._firestoreDocId,
           weaponName: weapon.name,
           error: `Database write failed: ${error}`,
         });
@@ -350,7 +368,7 @@ async function migrateAllWeapons(options: MigrationOptions): Promise<MigrationRe
   console.log('📥 Fetching weapons from database...');
   const weaponsSnapshot = await firestore.collection('weapons').get();
   const allWeapons = weaponsSnapshot.docs.map((doc) => ({
-    id: doc.id,
+    _firestoreDocId: doc.id,  // Keep track of Firestore document ID
     ...doc.data(),
   }));
 
