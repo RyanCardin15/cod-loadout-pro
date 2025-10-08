@@ -8,12 +8,32 @@
     {
       "src": "api/mcp.ts",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/oauth.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/oauth-associate.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
+      "src": "/api/mcp",
+      "dest": "/api/mcp.ts"
+    },
+    {
       "src": "/mcp",
       "dest": "/api/mcp.ts"
+    },
+    {
+      "src": "/api/oauth(.*)",
+      "dest": "/api/oauth.ts"
+    },
+    {
+      "src": "/api/oauth-associate",
+      "dest": "/api/oauth-associate.ts"
     },
     {
       "handle": "filesystem"
