@@ -11,19 +11,21 @@ import { WeaponCard } from '@/components/shared/WeaponCard';
 type TierKey = 'S' | 'A' | 'B' | 'C' | 'D';
 
 export default function MetaPage() {
-  const { metaData, loading, error } = useMeta();
-  const { weapons } = useWeapons();
-  const [selectedGame, setSelectedGame] = useState<string>('All');
+  const [selectedGame, setSelectedGame] = useState<string>('MW3');
   const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
 
-  // Group weapons by tier
-  const weaponsByTier = weapons.reduce((acc, weapon) => {
-    if (!acc[weapon.meta.tier]) {
-      acc[weapon.meta.tier] = [];
-    }
-    acc[weapon.meta.tier].push(weapon);
-    return acc;
-  }, {} as Record<TierKey, typeof weapons>);
+  // Fetch meta data for selected game (pass undefined for 'All')
+  const gameFilter = selectedGame === 'All' ? undefined : selectedGame;
+  const { metaData, loading, error } = useMeta(gameFilter);
+
+  // Use tiers from meta data instead of grouping from weapons hook
+  const weaponsByTier = metaData?.tiers || {
+    S: [],
+    A: [],
+    B: [],
+    C: [],
+    D: [],
+  };
 
   const tierConfig = [
     { tier: 'S' as TierKey, color: 'from-red-600 to-red-400', label: 'God Tier', description: 'Meta defining weapons' },

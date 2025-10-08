@@ -16,7 +16,9 @@
     "data:init": "tsx scripts/populate-initial-data.ts",
     "data:update": "tsx scripts/scrape-meta.ts",
     "data:sync": "tsx scripts/populate-initial-data.ts",
-    "data:test": "tsx scripts/test-data-infrastructure.ts"
+    "data:test": "tsx scripts/test-data-infrastructure.ts",
+    "data:cleanup": "tsx scripts/cleanup-duplicates.ts",
+    "data:health": "tsx scripts/health-check.ts"
   },
   "workspaces": [
     "server",

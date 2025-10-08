@@ -37,64 +37,42 @@ export function useMeta(game?: string) {
     const fetchMeta = async () => {
       try {
         setLoading(true);
-        // In production: API call to fetch meta data
-        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // Mock data
-        const mockMeta: MetaData = {
-          tiers: {
+        const gameParam = game ? `?game=${game}` : '';
+        const response = await fetch(`/api/meta${gameParam}`);
+
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.meta) {
+          throw new Error('No meta data available');
+        }
+
+        const metaSnapshot = data.meta;
+
+        // Transform to MetaData format
+        const transformedMeta: MetaData = {
+          tiers: metaSnapshot.tiers || {
             S: [],
             A: [],
             B: [],
             C: [],
             D: [],
           },
-          recentChanges: [
-            {
-              weaponId: 'mcw',
-              weaponName: 'MCW',
-              change: 'buff',
-              description: 'Increased damage range by 10%',
-              date: '2025-10-05',
-            },
-            {
-              weaponId: 'sva-545',
-              weaponName: 'SVA 545',
-              change: 'buff',
-              description: 'Reduced recoil, improved accuracy',
-              date: '2025-10-04',
-            },
-            {
-              weaponId: 'bp50',
-              weaponName: 'BP50',
-              change: 'nerf',
-              description: 'Decreased fire rate by 5%',
-              date: '2025-10-03',
-            },
-          ],
-          proLoadouts: [
-            {
-              id: '1',
-              proName: 'Scump',
-              weaponName: 'MCW',
-              tier: 'S',
-              game: 'MW3',
-            },
-            {
-              id: '2',
-              proName: 'Shotzzy',
-              weaponName: 'Striker',
-              tier: 'S',
-              game: 'MW3',
-            },
-          ],
-          lastUpdated: '2025-10-07T12:00:00Z',
+          recentChanges: metaSnapshot.recentChanges || [],
+          proLoadouts: metaSnapshot.topLoadouts || [],
+          lastUpdated: metaSnapshot.date || new Date().toISOString(),
         };
 
-        setMetaData(mockMeta);
+        setMetaData(transformedMeta);
         setError(null);
       } catch (err) {
+        console.error('Error fetching meta:', err);
         setError(err instanceof Error ? err : new Error('Failed to fetch meta data'));
+        setMetaData(null);
       } finally {
         setLoading(false);
       }

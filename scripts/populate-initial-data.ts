@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import 'dotenv/config';
+import crypto from 'crypto';
 import { initializeFirebase, db } from '../server/src/firebase/admin';
 import { fetchAllCODArmoryData, testCODArmoryConnection } from './lib/scrapers/codarmory-fetcher';
 import {
@@ -8,6 +9,26 @@ import {
   transformCODArmoryAttachment,
 } from './lib/transformers/codarmory-transformer';
 import { cache } from './lib/utils/cache';
+import { validateWeapon, validateAttachment, sanitizeWeaponName, normalizeGameName } from './lib/utils/data-validator';
+
+/**
+ * Generate deterministic ID from weapon name and game
+ * This ensures we can upsert instead of creating duplicates
+ */
+function generateWeaponId(name: string, game: string): string {
+  return crypto.createHash('md5')
+    .update(`${name.toLowerCase()}-${game.toLowerCase()}`)
+    .digest('hex');
+}
+
+/**
+ * Generate deterministic ID from attachment name and slot
+ */
+function generateAttachmentId(name: string, slot: string): string {
+  return crypto.createHash('md5')
+    .update(`${name.toLowerCase()}-${slot.toLowerCase()}`)
+    .digest('hex');
+}
 
 /**
  * Populate initial weapon and attachment data from CODArmory
@@ -18,35 +39,75 @@ async function populateWeapons() {
   const { weapons } = await fetchAllCODArmoryData();
 
   let successCount = 0;
+  let updateCount = 0;
   let errorCount = 0;
+  let skippedCount = 0;
 
   for (const weaponData of weapons) {
     try {
       const weapon = transformCODArmoryWeapon(weaponData);
 
-      // Create weapon document
-      const ref = db().collection('weapons').doc();
-      await ref.set({
-        ...weapon,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        dataSource: 'codarmory',
-        dataVersion: '1.0.0',
-      });
+      // Sanitize and normalize data
+      weapon.name = sanitizeWeaponName(weapon.name);
+      weapon.game = normalizeGameName(weapon.game);
 
-      successCount++;
-      console.log(`  ✅ Added: ${weapon.name} (${weapon.game} ${weapon.category})`);
+      // Validate weapon data
+      const validation = validateWeapon(weapon);
+
+      if (!validation.valid) {
+        console.error(`  ⚠️  Skipping ${weapon.name}: ${validation.errors.join(', ')}`);
+        skippedCount++;
+        continue;
+      }
+
+      // Log warnings if any
+      if (validation.warnings.length > 0) {
+        console.warn(`  ⚠️  ${weapon.name}: ${validation.warnings.join(', ')}`);
+      }
+
+      // Generate deterministic ID
+      const weaponId = generateWeaponId(weapon.name, weapon.game);
+      const ref = db().collection('weapons').doc(weaponId);
+
+      // Check if weapon exists
+      const existing = await ref.get();
+      const now = new Date().toISOString();
+
+      if (existing.exists) {
+        // Update existing weapon
+        await ref.update({
+          ...weapon,
+          updatedAt: now,
+          dataSource: 'codarmory',
+          dataVersion: '1.0.0',
+        });
+        updateCount++;
+        console.log(`  🔄 Updated: ${weapon.name} (${weapon.game} ${weapon.category})`);
+      } else {
+        // Create new weapon
+        await ref.set({
+          ...weapon,
+          createdAt: now,
+          updatedAt: now,
+          dataSource: 'codarmory',
+          dataVersion: '1.0.0',
+        });
+        successCount++;
+        console.log(`  ✅ Added: ${weapon.name} (${weapon.game} ${weapon.category})`);
+      }
     } catch (error) {
       errorCount++;
-      console.error(`  ❌ Failed to add weapon:`, error);
+      console.error(`  ❌ Failed to process weapon:`, error);
     }
   }
 
   console.log(`\n📊 Weapons Summary:`);
-  console.log(`   ✅ Success: ${successCount}`);
+  console.log(`   ✅ Created: ${successCount}`);
+  console.log(`   🔄 Updated: ${updateCount}`);
+  console.log(`   ⏭️  Skipped: ${skippedCount}`);
   console.log(`   ❌ Errors: ${errorCount}`);
 
-  return { successCount, errorCount };
+  return { successCount, updateCount, skippedCount, errorCount };
 }
 
 /**
@@ -58,34 +119,73 @@ async function populateAttachments() {
   const { attachments } = await fetchAllCODArmoryData();
 
   let successCount = 0;
+  let updateCount = 0;
   let errorCount = 0;
+  let skippedCount = 0;
 
   for (const attachmentData of attachments) {
     try {
       const attachment = transformCODArmoryAttachment(attachmentData);
 
-      // Create attachment document
-      const ref = db().collection('attachments').doc();
-      await ref.set({
-        ...attachment,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        dataSource: 'codarmory',
-      });
+      // Sanitize name
+      attachment.name = sanitizeWeaponName(attachment.name);
 
-      successCount++;
-      console.log(`  ✅ Added: ${attachment.name} (${attachment.slot})`);
+      // Validate attachment data
+      const validation = validateAttachment(attachment);
+
+      if (!validation.valid) {
+        console.error(`  ⚠️  Skipping ${attachment.name}: ${validation.errors.join(', ')}`);
+        skippedCount++;
+        continue;
+      }
+
+      // Log warnings if any
+      if (validation.warnings.length > 0 && Math.random() < 0.1) {
+        // Only log 10% of warnings to avoid spam
+        console.warn(`  ⚠️  ${attachment.name}: ${validation.warnings.join(', ')}`);
+      }
+
+      // Generate deterministic ID
+      const attachmentId = generateAttachmentId(attachment.name, attachment.slot);
+      const ref = db().collection('attachments').doc(attachmentId);
+
+      // Check if attachment exists
+      const existing = await ref.get();
+      const now = new Date().toISOString();
+
+      if (existing.exists) {
+        // Update existing attachment
+        await ref.update({
+          ...attachment,
+          updatedAt: now,
+          dataSource: 'codarmory',
+        });
+        updateCount++;
+        console.log(`  🔄 Updated: ${attachment.name} (${attachment.slot})`);
+      } else {
+        // Create new attachment
+        await ref.set({
+          ...attachment,
+          createdAt: now,
+          updatedAt: now,
+          dataSource: 'codarmory',
+        });
+        successCount++;
+        console.log(`  ✅ Added: ${attachment.name} (${attachment.slot})`);
+      }
     } catch (error) {
       errorCount++;
-      console.error(`  ❌ Failed to add attachment:`, error);
+      console.error(`  ❌ Failed to process attachment:`, error);
     }
   }
 
   console.log(`\n📊 Attachments Summary:`);
-  console.log(`   ✅ Success: ${successCount}`);
+  console.log(`   ✅ Created: ${successCount}`);
+  console.log(`   🔄 Updated: ${updateCount}`);
+  console.log(`   ⏭️  Skipped: ${skippedCount}`);
   console.log(`   ❌ Errors: ${errorCount}`);
 
-  return { successCount, errorCount };
+  return { successCount, updateCount, skippedCount, errorCount };
 }
 
 /**
@@ -173,8 +273,8 @@ async function main() {
     console.log('🎉 Data Population Complete!');
     console.log('='.repeat(60));
     console.log(`\n📊 Total Results:`);
-    console.log(`   🔫 Weapons: ${weaponStats.successCount} added, ${weaponStats.errorCount} failed`);
-    console.log(`   🔧 Attachments: ${attachmentStats.successCount} added, ${attachmentStats.errorCount} failed`);
+    console.log(`   🔫 Weapons: ${weaponStats.successCount} created, ${weaponStats.updateCount} updated, ${weaponStats.skippedCount} skipped, ${weaponStats.errorCount} failed`);
+    console.log(`   🔧 Attachments: ${attachmentStats.successCount} created, ${attachmentStats.updateCount} updated, ${attachmentStats.skippedCount} skipped, ${attachmentStats.errorCount} failed`);
 
     // Cache stats
     const cacheStats = await cache.stats();
