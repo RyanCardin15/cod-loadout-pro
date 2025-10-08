@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { Navigation } from '@/components/ui/Navigation';
 import { Toaster } from 'sonner';
+import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -74,20 +75,22 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${rajdhani.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen bg-cod-black text-white antialiased scan-lines">
-        <Providers>
-          <div className="relative flex min-h-screen flex-col">
-            <Navigation />
-            <main className="flex-1">
-              {children}
-            </main>
-            <footer className="border-t border-cod-surface bg-cod-gray/50 backdrop-blur-md">
-              <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-400">
-                <p>© 2025 Counterplay. Not affiliated with Activision or Call of Duty.</p>
-              </div>
-            </footer>
-          </div>
-          <Toaster position="top-right" theme="dark" />
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <div className="relative flex min-h-screen flex-col">
+              <Navigation />
+              <main className="flex-1">
+                {children}
+              </main>
+              <footer className="border-t border-cod-surface bg-cod-gray/50 backdrop-blur-md">
+                <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-400">
+                  <p>© 2025 Counterplay. Not affiliated with Activision or Call of Duty.</p>
+                </div>
+              </footer>
+            </div>
+            <Toaster position="top-right" theme="dark" />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

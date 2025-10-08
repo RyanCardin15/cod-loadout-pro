@@ -197,6 +197,66 @@ Set all `NEXT_PUBLIC_*` variables in your deployment platform.
 
 ## 🧪 Testing
 
+Counterplay has a comprehensive test suite with >60% coverage across the codebase.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run tests in CI mode
+npm run test:ci
+```
+
+### Test Structure
+
+```
+__tests__/
+├── setup/                 # Test utilities and mocks
+│   ├── testUtils.tsx     # Custom render with providers
+│   ├── mocks.ts          # Mock data factories
+│   └── firebase-mock.ts  # Firebase mocks
+├── components/           # Component tests
+│   ├── WeaponCard.test.tsx
+│   ├── LoadoutCard.test.tsx
+│   ├── ErrorBoundary.test.tsx
+│   └── ErrorFallback.test.tsx
+├── hooks/                # Custom hook tests
+│   ├── useWeapons.test.tsx
+│   ├── useLoadouts.test.tsx
+│   └── useMeta.test.tsx
+└── lib/                  # Utility tests
+    ├── logger.test.ts
+    ├── env.test.ts
+    ├── errors.test.ts
+    └── rateLimit.test.ts
+```
+
+### Coverage Targets
+
+- **Overall**: >60% statements, branches, functions, lines
+- **Utilities** (`src/lib/**`): >80% coverage
+- **Hooks** (`src/hooks/**`): >70% coverage
+- **Components**: >60% coverage
+
+### Testing Guidelines
+
+See [docs/TESTING.md](./docs/TESTING.md) for:
+- Writing new tests
+- Testing best practices
+- Mocking strategies
+- Coverage requirements
+- CI/CD integration
+
+### Development
+
 ```bash
 # Run development server
 npm run dev
@@ -207,6 +267,9 @@ npm start
 
 # Lint code
 npm run lint
+
+# Type check
+npx tsc --noEmit
 ```
 
 ## 🤝 Contributing

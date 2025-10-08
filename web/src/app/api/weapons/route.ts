@@ -1,38 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
 
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const game = searchParams.get('game');
-    const category = searchParams.get('category');
-    const limit = parseInt(searchParams.get('limit') || '50');
+import { InternalServerError, ServiceUnavailableError } from '@/lib/api/errors';
+import { createSuccessResponse, validateQuery } from '@/lib/api/middleware';
+import { RATE_LIMITS, withRateLimit } from '@/lib/api/rateLimit';
+import { db, FirebaseAdminError } from '@/lib/firebase/admin';
+import { normalizeWeapons } from '@/lib/utils/weapon-normalizer';
+import { weaponQuerySchema } from '@/lib/validation/schemas';
+import type { WeaponsResponse } from '@/types';
 
-    let weaponQuery: any = db().collection('weapons');
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
-    // Apply filters
-    if (game) {
-      weaponQuery = weaponQuery.where('game', '==', game);
+/**
+ * GET /api/weapons
+ *
+ * Fetch weapons with optional filtering
+ *
+ * @param game - Filter by game (MW3, Warzone, BO6, MW2)
+ * @param category - Filter by category (AR, SMG, etc.)
+ * @param limit - Maximum results (1-100, default: 50)
+ */
+export const GET = withRateLimit(
+  async (request: NextRequest) => {
+    // Validate query parameters
+    const { game, category, limit } = validateQuery(request, weaponQuerySchema);
+
+    try {
+      let weaponQuery: any = db().collection('weapons');
+
+      // Apply filters
+      if (game) {
+        weaponQuery = weaponQuery.where('game', '==', game);
+      }
+      if (category) {
+        weaponQuery = weaponQuery.where('category', '==', category);
+      }
+
+      // Sort by popularity and limit
+      weaponQuery = weaponQuery.orderBy('meta.popularity', 'desc').limit(limit);
+
+      const snapshot = await weaponQuery.get();
+      const rawWeapons = snapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // Normalize V3 MultiSourceField objects to V1 primitives for backward compatibility
+      const weapons = normalizeWeapons(rawWeapons);
+
+      const response: WeaponsResponse = { weapons };
+      return createSuccessResponse(response);
+    } catch (error) {
+      if (error instanceof FirebaseAdminError) {
+        throw new ServiceUnavailableError(
+          'Database',
+          'Firebase Admin is not properly configured. Please check server environment variables.'
+        );
+      }
+      throw new InternalServerError('Failed to fetch weapons', { error });
     }
-    if (category) {
-      weaponQuery = weaponQuery.where('category', '==', category);
-    }
+  },
+  'GET:/api/weapons',
+  RATE_LIMITS.GENEROUS
+);
 
-    // Sort by popularity and limit
-    weaponQuery = weaponQuery.orderBy('meta.popularity', 'desc').limit(limit);
-
-    const snapshot = await weaponQuery.get();
-    const weapons = snapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    return NextResponse.json({ weapons });
-  } catch (error) {
-    console.error('Error fetching weapons:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch weapons' },
-      { status: 500 }
-    );
-  }
+/**
+ * Handle CORS preflight
+ */
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }

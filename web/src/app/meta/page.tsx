@@ -4,19 +4,20 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Calendar, Users, Zap } from 'lucide-react';
 import { useMeta } from '@/hooks/useMeta';
-import { useWeapons } from '@/hooks/useWeapons';
+// import { useWeapons } from '@/hooks/useWeapons';
 import { TierBadge } from '@/components/shared/TierBadge';
-import { WeaponCard } from '@/components/shared/WeaponCard';
+// import { WeaponCard } from '@/components/shared/WeaponCard';
+import { RouteErrorBoundary } from '@/components/errors/RouteErrorBoundary';
 
 type TierKey = 'S' | 'A' | 'B' | 'C' | 'D';
 
-export default function MetaPage() {
+function MetaPageContent() {
   const [selectedGame, setSelectedGame] = useState<string>('MW3');
-  const [selectedTier, setSelectedTier] = useState<TierKey | null>(null);
+  const [_selectedTier, _setSelectedTier] = useState<TierKey | null>(null);
 
   // Fetch meta data for selected game (pass undefined for 'All')
   const gameFilter = selectedGame === 'All' ? undefined : selectedGame;
-  const { metaData, loading, error } = useMeta(gameFilter);
+  const { metaData } = useMeta(gameFilter);
 
   // Use tiers from meta data instead of grouping from weapons hook
   const weaponsByTier = metaData?.tiers || {
@@ -211,7 +212,7 @@ export default function MetaPage() {
               </div>
 
               <div className="space-y-3">
-                {metaData?.proLoadouts.map((loadout, index) => (
+                {metaData?.proLoadouts.map((loadout) => (
                   <div
                     key={loadout.id}
                     className="bg-cod-surface/50 rounded-lg p-3 hover:bg-cod-surface transition-colors cursor-pointer"
@@ -231,5 +232,13 @@ export default function MetaPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MetaPage() {
+  return (
+    <RouteErrorBoundary>
+      <MetaPageContent />
+    </RouteErrorBoundary>
   );
 }

@@ -5,6 +5,7 @@ import { useAuth } from './useAuth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export interface UserProfile {
   userId: string;
@@ -75,29 +76,23 @@ export function useProfile() {
   } = useQuery({
     queryKey: ['profile', user?.uid],
     queryFn: async (): Promise<UserProfile | null> => {
-      console.log('[useProfile] Query function called', {
-        hasUser: !!user,
-        userId: user?.uid,
-        isAuthenticated,
-      });
-
       if (!user) {
-        console.log('[useProfile] No user, returning null');
+        logger.debug('Profile query: No user authenticated');
         return null;
       }
 
       try {
-        console.log('[useProfile] Fetching profile from Firestore for user:', user.uid);
+        logger.firebase('getDoc', 'users', { userId: user.uid });
         const docRef = doc(db, 'users', user.uid);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          console.log('[useProfile] Profile found:', docSnap.data());
+          logger.debug('Profile found', { userId: user.uid });
           return docSnap.data() as UserProfile;
         }
 
         // Create default profile if doesn't exist
-        console.log('[useProfile] Creating new profile for user:', user.uid);
+        logger.info('Creating new user profile', { userId: user.uid });
         const newProfile: UserProfile = {
           ...DEFAULT_PROFILE,
           userId: user.uid,
@@ -107,14 +102,12 @@ export function useProfile() {
         };
 
         await setDoc(docRef, newProfile);
-        console.log('[useProfile] Profile created successfully');
+        logger.info('Profile created successfully', { userId: user.uid });
         return newProfile;
       } catch (err: any) {
-        console.error('[useProfile] Error in queryFn:', err);
-        console.error('[useProfile] Error details:', {
-          code: err?.code,
-          message: err?.message,
-          name: err?.name,
+        logger.firebaseError('getDoc/setDoc', err, {
+          collection: 'users',
+          userId: user.uid
         });
         throw err;
       }
@@ -143,7 +136,7 @@ export function useProfile() {
       toast.success('Profile updated successfully');
     },
     onError: (error) => {
-      console.error('Error updating profile:', error);
+      logger.firebaseError('updateDoc', error, { collection: 'users' });
       toast.error('Failed to update profile');
     },
   });
@@ -177,7 +170,7 @@ export function useProfile() {
 
       queryClient.invalidateQueries({ queryKey: ['profile', user?.uid] });
     } catch (error) {
-      console.error('Error tracking activity:', error);
+      logger.firebaseError('trackActivity', error, { activityType, userId: user?.uid });
     }
   };
 
@@ -200,7 +193,7 @@ export function useProfile() {
 
       toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      logger.firebaseError('toggleFavorite', error, { loadoutId, userId: user?.uid });
       toast.error('Failed to update favorites');
     }
   };

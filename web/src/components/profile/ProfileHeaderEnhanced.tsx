@@ -16,7 +16,6 @@ export function ProfileHeaderEnhanced({ profile }: ProfileHeaderProps) {
 
   // Calculate level based on total queries
   const level = Math.floor(profile.totalQueries / 10) + 1;
-  const nextLevelQueries = level * 10;
   const progress = ((profile.totalQueries % 10) / 10) * 100;
 
   // Calculate rank based on stats
@@ -117,7 +116,7 @@ export function ProfileHeaderEnhanced({ profile }: ProfileHeaderProps) {
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-cod-accent to-cod-accent-dark flex items-center justify-center text-white font-bold text-4xl">
-                  {(profile.displayName || user?.email || 'U')[0].toUpperCase()}
+                  {(profile.displayName || user?.email || 'U')[0]?.toUpperCase() || 'U'}
                 </div>
               )}
 

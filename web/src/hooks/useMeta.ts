@@ -1,32 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Weapon } from './useWeapons';
-
-export interface MetaData {
-  tiers: {
-    S: Weapon[];
-    A: Weapon[];
-    B: Weapon[];
-    C: Weapon[];
-    D: Weapon[];
-  };
-  recentChanges: Array<{
-    weaponId: string;
-    weaponName: string;
-    change: 'buff' | 'nerf' | 'adjustment';
-    description: string;
-    date: string;
-  }>;
-  proLoadouts: Array<{
-    id: string;
-    proName: string;
-    weaponName: string;
-    tier: string;
-    game: string;
-  }>;
-  lastUpdated: string;
-}
+import { logger } from '@/lib/logger';
+import { MetaData } from '@/types';
 
 export function useMeta(game?: string) {
   const [metaData, setMetaData] = useState<MetaData | null>(null);
@@ -70,7 +46,8 @@ export function useMeta(game?: string) {
         setMetaData(transformedMeta);
         setError(null);
       } catch (err) {
-        console.error('Error fetching meta:', err);
+        const url = `/api/meta${game ? `?game=${game}` : ''}`;
+        logger.apiError('GET', url, err);
         setError(err instanceof Error ? err : new Error('Failed to fetch meta data'));
         setMetaData(null);
       } finally {

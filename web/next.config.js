@@ -2,7 +2,28 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['firebasestorage.googleapis.com', 'chatgpt.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pbs.twimg.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.discordapp.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'chatgpt.com',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
   experimental: {

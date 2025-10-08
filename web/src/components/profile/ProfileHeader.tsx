@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { Camera, Mail } from 'lucide-react';
 import type { UserProfile } from '@/hooks/useProfile';
@@ -24,14 +25,16 @@ export function ProfileHeader({ profile }: ProfileHeaderProps) {
         {/* Avatar */}
         <div className="relative group">
           {user?.photoURL ? (
-            <img
+            <Image
               src={user.photoURL}
               alt={profile.displayName || 'User'}
+              width={96}
+              height={96}
               className="w-24 h-24 rounded-xl border-4 border-cod-accent shadow-lg"
             />
           ) : (
             <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-cod-accent to-cod-accent-dark flex items-center justify-center text-white font-bold text-4xl border-4 border-cod-accent shadow-lg">
-              {(profile.displayName || user?.email || 'U')[0].toUpperCase()}
+              {(profile.displayName || user?.email || 'U')[0]?.toUpperCase() || 'U'}
             </div>
           )}
 

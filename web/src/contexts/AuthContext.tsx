@@ -16,6 +16,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider, twitterProvider, discordProvider } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export type AuthProviderType = 'google' | 'twitter' | 'discord';
 
@@ -34,14 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('[AuthContext] Setting up auth state listener');
+    logger.debug('Setting up auth state listener');
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('[AuthContext] Auth state changed:', {
+      logger.debug('Auth state changed', {
         hasUser: !!user,
         userId: user?.uid,
-        email: user?.email,
-        displayName: user?.displayName,
       });
 
       setUser(user);
@@ -49,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      console.log('[AuthContext] Cleaning up auth listener');
+      logger.debug('Cleaning up auth listener');
       unsubscribe();
     };
   }, []);
@@ -80,7 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       toast.success(`Welcome, ${result.user.displayName || 'Operator'}!`);
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      logger.error('Sign in failed', {
+        error,
+        provider: providerType,
+        code: error?.code
+      });
 
       if (error.code === 'auth/popup-closed-by-user') {
         toast.error('Sign in cancelled');
@@ -100,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('firebaseIdToken');
       toast.success('Signed out successfully');
     } catch (error) {
-      console.error('Sign out error:', error);
+      logger.error('Sign out failed', { error });
       toast.error('Failed to sign out');
       throw error;
     }
@@ -114,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('firebaseIdToken', token);
       return token;
     } catch (error) {
-      console.error('Error getting ID token:', error);
+      logger.error('Failed to get ID token', { error });
       return null;
     }
   };

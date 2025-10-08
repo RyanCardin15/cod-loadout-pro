@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -38,10 +39,17 @@ export function Navigation() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <Crosshair className="h-8 w-8 text-cod-orange transition-transform group-hover:rotate-45 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-cod-orange/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="relative w-12 h-12 lg:w-14 lg:h-14">
+                <Image
+                  src="/logo.png"
+                  alt="Counterplay Logo"
+                  fill
+                  className="object-contain transition-transform group-hover:scale-110"
+                  priority
+                  sizes="(max-width: 1024px) 48px, 56px"
+                />
+                <div className="absolute inset-0 bg-cod-orange/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <span className="text-xl font-display font-bold gradient-text">
                 Counterplay
@@ -100,7 +108,16 @@ export function Navigation() {
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2">
-              <Crosshair className="h-6 w-6 text-cod-orange" />
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10">
+                <Image
+                  src="/logo.png"
+                  alt="Counterplay Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                  sizes="(max-width: 640px) 36px, 40px"
+                />
+              </div>
               <span className="text-lg font-display font-bold gradient-text">
                 Counterplay
               </span>

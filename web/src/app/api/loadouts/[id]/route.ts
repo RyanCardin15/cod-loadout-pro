@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { db } from '@/lib/firebase/admin';
+import { validateLoadoutAttachments } from '@/lib/firebase/attachments';
+import { validateLoadoutWeapons } from '@/lib/firebase/weapons';
+import { logger } from '@/lib/logger';
+import { detectXSSInObject, sanitizeLoadout } from '@/lib/security/sanitize';
+import { validateIdParam } from '@/lib/validation/route-params';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const loadoutId = params.id;
+    // Validate route parameter
+    const loadoutId = validateIdParam(params);
+    if (loadoutId instanceof NextResponse) {
+      return loadoutId;
+    }
 
     const doc = await db().collection('loadouts').doc(loadoutId).get();
 
@@ -24,7 +37,7 @@ export async function GET(
 
     return NextResponse.json({ loadout });
   } catch (error) {
-    console.error('Error fetching loadout:', error);
+    logger.apiError('GET', `/api/loadouts/${params.id}`, error);
     return NextResponse.json(
       { error: 'Failed to fetch loadout' },
       { status: 500 }
@@ -33,11 +46,15 @@ export async function GET(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const loadoutId = params.id;
+    // Validate route parameter
+    const loadoutId = validateIdParam(params);
+    if (loadoutId instanceof NextResponse) {
+      return loadoutId;
+    }
 
     await db().collection('loadouts').doc(loadoutId).delete();
 
@@ -46,7 +63,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error deleting loadout:', error);
+    logger.apiError('DELETE', `/api/loadouts/${params.id}`, error);
     return NextResponse.json(
       { error: 'Failed to delete loadout' },
       { status: 500 }
@@ -59,11 +76,56 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const loadoutId = params.id;
+    // Validate route parameter
+    const loadoutId = validateIdParam(params);
+    if (loadoutId instanceof NextResponse) {
+      return loadoutId;
+    }
+
     const body = await request.json();
 
+    // Detect XSS attempts for logging
+    const xssDetection = detectXSSInObject(body);
+    if (xssDetection.detected) {
+      logger.apiError('PATCH', `/api/loadouts/${loadoutId}`, {
+        message: 'XSS attempt detected',
+        fields: xssDetection.fields,
+      });
+    }
+
+    // Sanitize all user input
+    const sanitizedData = sanitizeLoadout(body);
+
+    // Validate weapon references if weapons are being updated
+    if (sanitizedData.primary || sanitizedData.secondary) {
+      const weaponValidation = await validateLoadoutWeapons(sanitizedData);
+      if (!weaponValidation.valid) {
+        return NextResponse.json(
+          {
+            error: 'Invalid weapon references',
+            details: `The following weapon IDs do not exist: ${weaponValidation.invalidIds.join(', ')}`,
+            invalidWeapons: weaponValidation.invalidIds,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validate attachment references
+      const attachmentValidation = await validateLoadoutAttachments(sanitizedData);
+      if (!attachmentValidation.valid) {
+        return NextResponse.json(
+          {
+            error: 'Invalid attachment references',
+            details: `The following attachment IDs do not exist: ${attachmentValidation.invalidIds.join(', ')}`,
+            invalidAttachments: attachmentValidation.invalidIds,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     const updateData = {
-      ...body,
+      ...sanitizedData,
       updatedAt: new Date().toISOString(),
     };
 
@@ -76,7 +138,7 @@ export async function PATCH(
       message: 'Loadout updated successfully'
     });
   } catch (error) {
-    console.error('Error updating loadout:', error);
+    logger.apiError('PATCH', `/api/loadouts/${params.id}`, error);
     return NextResponse.json(
       { error: 'Failed to update loadout' },
       { status: 500 }

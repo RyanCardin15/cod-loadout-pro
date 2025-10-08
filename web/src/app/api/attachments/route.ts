@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+
 import { db } from '@/lib/firebase/admin';
+import { logger } from '@/lib/logger';
+import { handleApiError, validateQuery } from '@/lib/utils/validation';
+import { attachmentQuerySchema } from '@/lib/validation/schemas';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const slot = searchParams.get('slot');
-    const limit = parseInt(searchParams.get('limit') || '100');
+    // Validate query parameters
+    const { slot, weaponId, limit } = validateQuery(request, attachmentQuerySchema);
 
     let attachmentQuery: any = db().collection('attachments');
 
     // Apply filters
     if (slot) {
       attachmentQuery = attachmentQuery.where('slot', '==', slot);
+    }
+    if (weaponId) {
+      attachmentQuery = attachmentQuery.where('weaponId', '==', weaponId);
     }
 
     attachmentQuery = attachmentQuery.limit(limit);
@@ -24,10 +33,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ attachments });
   } catch (error) {
-    console.error('Error fetching attachments:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch attachments' },
-      { status: 500 }
-    );
+    logger.apiError('GET', '/api/attachments', error);
+    return handleApiError(error);
   }
 }

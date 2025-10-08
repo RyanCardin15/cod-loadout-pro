@@ -3,7 +3,7 @@
  * Wraps MCP protocol calls in a user-friendly interface
  */
 
-const MCP_ENDPOINT = process.env.NEXT_PUBLIC_MCP_ENDPOINT || '/api/mcp';
+const MCP_ENDPOINT = process.env['NEXT_PUBLIC_MCP_ENDPOINT'] || '/api/mcp';
 
 interface MCPRequest {
   jsonrpc: '2.0';

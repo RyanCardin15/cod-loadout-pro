@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+import { db, FirebaseAdminError } from '@/lib/firebase/admin';
+import { validateQuery, handleApiError } from '@/lib/utils/validation';
+import { metaQuerySchema } from '@/lib/validation/schemas';
+import type { MetaResponse } from '@/types';
+import { normalizeWeapons } from '@/lib/utils/weapon-normalizer';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const game = searchParams.get('game') || 'MW3';
+    // Validate query parameters
+    const { game } = validateQuery(request, metaQuerySchema);
 
     // Get latest meta snapshot
     const snapshotQuery = await db()
@@ -24,12 +31,15 @@ export async function GET(request: NextRequest) {
         .limit(50)
         .get();
 
-      const weapons = weaponsSnapshot.docs.map(doc => ({
+      const rawWeapons = weaponsSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as any[];
 
-      // Group weapons by tier
+      // Normalize V3 to V1 before grouping by tier
+      const weapons = normalizeWeapons(rawWeapons);
+
+      // Group weapons by tier (now safe!)
       const tiers = {
         S: weapons.filter(w => w.meta.tier === 'S'),
         A: weapons.filter(w => w.meta.tier === 'A'),
@@ -49,9 +59,21 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    const firstDoc = snapshotQuery.docs[0];
+    if (!firstDoc) {
+      return NextResponse.json({
+        meta: {
+          tiers: { S: [], A: [], B: [], C: [], D: [] },
+          recentChanges: [],
+          proLoadouts: [],
+          lastUpdated: new Date().toISOString(),
+        },
+      });
+    }
+
     const metaSnapshot: any = {
-      id: snapshotQuery.docs[0].id,
-      ...snapshotQuery.docs[0].data(),
+      id: firstDoc.id,
+      ...firstDoc.data(),
     };
 
     // Enrich tier data with full weapon details if not already present
@@ -66,9 +88,11 @@ export async function GET(request: NextRequest) {
           const weaponDocs = await Promise.all(
             weaponIds.map(id => db().collection('weapons').doc(id).get())
           );
-          enrichedTiers[tier] = weaponDocs
+          const rawEnrichedWeapons = weaponDocs
             .filter(doc => doc.exists)
-            .map(doc => ({ id: doc.id, ...doc.data() }));
+            .map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+          // Normalize before adding to tiers
+          enrichedTiers[tier] = normalizeWeapons(rawEnrichedWeapons);
         } else {
           enrichedTiers[tier] = weaponArray;
         }
@@ -77,12 +101,18 @@ export async function GET(request: NextRequest) {
       metaSnapshot.tiers = enrichedTiers;
     }
 
-    return NextResponse.json({ meta: metaSnapshot });
+    const response: MetaResponse = { meta: metaSnapshot };
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching meta:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch meta data' },
-      { status: 500 }
-    );
+    if (error instanceof FirebaseAdminError) {
+      return NextResponse.json(
+        {
+          error: 'Database connection failed',
+          details: error.message
+        },
+        { status: 503 }
+      );
+    }
+    return handleApiError(error);
   }
 }

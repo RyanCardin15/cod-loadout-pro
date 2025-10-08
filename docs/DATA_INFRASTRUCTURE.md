@@ -6,7 +6,7 @@ Counterplay uses a multi-source data pipeline to gather weapon stats, meta ranki
 
 ### Implementation Status
 
-**✅ Fully Implemented:**
+**✅ Fully Implemented (Phase 1):**
 - Deterministic ID generation for duplicate prevention
 - Upsert logic for safe data updates
 - Data validation and sanitization
@@ -16,14 +16,24 @@ Counterplay uses a multi-source data pipeline to gather weapon stats, meta ranki
 - GitHub Actions automation
 - Health monitoring system
 
-**⚠️ Partially Implemented:**
-- WZStats.gg scraper (infrastructure ready, needs HTML parsing)
-- CODMunity scraper (infrastructure ready, needs HTML/API analysis)
+**✅ Fully Implemented (Phase 2):**
+- **WZStats.gg scraper** - Multi-strategy scraping (API + HTML + __NEXT_DATA__)
+- **CODMunity scraper** - Ballistics data extraction (TTK, damage ranges, recoil)
+- **Data source orchestrator** - Parallel fetching with retry logic
+- **Data lineage tracking** - Complete provenance with confidence scoring
+- **Multi-source field tracking** - Track all sources per field
+- **Conflict resolution** - 5 strategies (weighted avg, consensus, priority, etc.)
+- **Schema merger** - Merge weapons from multiple sources into unified schema
+- **Schema versioning** - V1 (flat) → V2 (lineage meta) → V3 (multi-source fields)
+- **Schema migrations** - Automated migration system with dry-run and rollback
+- **Multi-source integration** - populate-initial-data.ts supports multi-source mode
 
-**📋 Planned:**
+**📋 Planned (Phase 3):**
+- Real-time meta tracking with hourly updates
+- Change detection and alerting
+- Balance patch tracking
 - TrueGameData scraper
 - sym.gg API integration
-- Advanced meta analysis
 
 ## Data Sources
 
@@ -34,19 +44,21 @@ Counterplay uses a multi-source data pipeline to gather weapon stats, meta ranki
 - **Update Frequency**: Weekly
 - **Status**: ✅ Fully Implemented
 
-### 2. WZStats.gg (Secondary - Placeholder)
-- **Type**: HTML Scraping / API
+### 2. WZStats.gg (Secondary - Active)
+- **Type**: HTML Scraping / API / __NEXT_DATA__ JSON
 - **URL**: https://wzstats.gg
-- **Data**: Live meta tiers, weapon usage %, win rates
+- **Data**: Live meta tiers, weapon usage %, win rates, pick rates
 - **Update Frequency**: Daily
-- **Status**: ⚠️ Infrastructure Ready (needs HTML analysis)
+- **Status**: ✅ Fully Implemented (Multi-strategy scraper)
+- **Strategies**: API endpoints, __NEXT_DATA__ parsing, HTML cheerio fallback
 
-### 3. CODMunity (Secondary - Placeholder)
+### 3. CODMunity (Secondary - Active)
 - **Type**: HTML Scraping / API
 - **URL**: https://codmunity.gg
-- **Data**: TTK, bullet velocity, damage profiles
+- **Data**: TTK, bullet velocity, damage profiles, recoil patterns, ADS times
 - **Update Frequency**: Weekly
-- **Status**: ⚠️ Infrastructure Ready (needs HTML/API analysis)
+- **Status**: ✅ Fully Implemented (Comprehensive ballistics extraction)
+- **Features**: Validation, retry logic, structured data extraction
 
 ### 4. TrueGameData (Future)
 - **Type**: HTML Scraping
@@ -67,7 +79,7 @@ Counterplay uses a multi-source data pipeline to gather weapon stats, meta ranki
 │                     Data Collection Layer                    │
 ├─────────────────────────────────────────────────────────────┤
 │  CODArmory  │  WZStats  │  CODMunity  │  TrueGameData  │... │
-│   (GitHub)  │  (HTML)   │   (HTML)    │     (HTML)     │    │
+│   (✅ Active) │ (✅ Active) │ (✅ Active)  │     (📋 Future)     │    │
 └──────┬──────┴─────┬─────┴──────┬──────┴────────┬────────┴────┘
        │            │            │               │
        ├────────────┼────────────┼───────────────┘
@@ -81,20 +93,47 @@ Counterplay uses a multi-source data pipeline to gather weapon stats, meta ranki
 └──────┬─────────────────────────────────┘
        │
 ┌──────▼─────────────────────────────────┐
+│   Data Source Orchestrator (Phase 2)   │
+│  • Parallel fetching (Promise.all)     │
+│  • Retry logic with exponential backoff│
+│  • Health monitoring per source        │
+│  • Graceful degradation                │
+└──────┬─────────────────────────────────┘
+       │
+┌──────▼─────────────────────────────────┐
 │       Transformation Layer             │
 │  • Normalize weapon names              │
-│  • Merge stats from multiple sources   │
-│  • Calculate composite tiers           │
-│  • Validate data integrity             │
+│  • Source-specific transformers        │
+│  • Data validation                     │
+│  • Sanitization                        │
+└──────┬─────────────────────────────────┘
+       │
+┌──────▼─────────────────────────────────┐
+│    Schema Merger (Phase 2)             │
+│  • Match weapons across sources        │
+│  • Detect conflicts                    │
+│  • Resolve using 5 strategies          │
+│  • Calculate confidence scores         │
+│  • Track lineage metadata              │
+└──────┬─────────────────────────────────┘
+       │
+┌──────▼─────────────────────────────────┐
+│    Schema Migration (Phase 2)          │
+│  • V1 → V2 → V3 automatic migration    │
+│  • Dry-run mode                        │
+│  • Batch processing                    │
+│  • Rollback capability                 │
 └──────┬─────────────────────────────────┘
        │
 ┌──────▼─────────────────────────────────┐
 │       Storage Layer (Firestore)        │
 │  Collections:                          │
-│  • weapons (230+ docs)                 │
+│  • weapons (V3 schema with lineage)    │
 │  • attachments (1500+ docs)            │
 │  • loadouts (user-generated)           │
 │  • meta_snapshots (historical)         │
+│  • weapon_lineage (provenance tracking)│
+│  • schema_migrations (migration history)│
 └────────────────────────────────────────┘
 ```
 
@@ -126,30 +165,245 @@ if (existing.exists) {
 }
 ```
 
+## Data Lineage & Provenance (Phase 2)
+
+### Overview
+Track the origin, confidence, and freshness of every data point across multiple sources.
+
+### Key Features
+
+**Confidence Scoring**:
+```typescript
+confidence = sourceReliability × e^(-0.05 × age_days) × qualityFactor
+```
+
+**Freshness Decay**:
+```typescript
+freshness = e^(-decay_rate × age_days)
+```
+
+**Source Tracking**:
+- Every field tracks which sources provided it
+- Timestamps for each source contribution
+- Confidence scores per source
+- Conflict detection across sources
+
+### Data Structures
+
+**MultiSourceField<T>**:
+```typescript
+{
+  currentValue: T,
+  primarySource: DataSource,
+  sources: DataLineage[],
+  confidence: number,  // 0-1
+  lastUpdated: number,
+  hasConflict: boolean,
+  conflicts?: Array<{source, value, confidence}>
+}
+```
+
+**LineageMetadata**:
+```typescript
+{
+  averageConfidence: number,
+  minConfidence: number,
+  maxConfidence: number,
+  totalSources: number,
+  sourcesByName: Record<DataSource, number>,
+  conflictedFields: string[],
+  staleFields: string[],
+  lastUpdate: number,
+  oldestUpdate: number
+}
+```
+
+### Firestore Collections
+
+- **weapon_lineage**: Historical lineage records per weapon per field
+- **schema_migrations**: Migration history and rollback data
+
+### Usage
+
+```typescript
+import { lineageTracker } from './lib/lineage/lineage-tracker';
+import { lineageQueryService } from './lib/lineage/lineage-query';
+
+// Calculate confidence
+const confidence = lineageTracker.calculateConfidence(
+  DataSource.CODARMORY,
+  Date.now(),
+  1.0  // quality factor
+);
+
+// Query history
+const history = await lineageQueryService.queryHistory({
+  weaponId: 'abc123',
+  field: 'stats.damage',
+  startTime: Date.now() - 30 * 24 * 60 * 60 * 1000  // Last 30 days
+});
+```
+
+## Multi-Source Merging & Conflict Resolution (Phase 2)
+
+### Schema Merger
+
+Combines data from multiple sources into a single `UnifiedWeapon` (V3 schema).
+
+**Process**:
+1. Fetch weapons from all sources
+2. Group by canonical ID (MD5 hash of name + game)
+3. Normalize each source's data format
+4. Detect conflicts across sources
+5. Resolve conflicts using appropriate strategy
+6. Calculate confidence scores
+7. Generate lineage metadata
+8. Validate merged weapon
+9. Upsert to Firestore
+
+### Conflict Resolution Strategies
+
+#### 1. Weighted Average (Numeric Values)
+```typescript
+value = Σ(value_i × confidence_i) / Σ(confidence_i)
+```
+**Used for**: Stats (damage, range, accuracy, fireRate, etc.)
+
+#### 2. Consensus (Categorical Values)
+Picks the most common value across sources.
+**Used for**: Tier rankings (S/A/B/C/D)
+
+#### 3. Highest Confidence
+Picks the value from the source with highest confidence score.
+**Used for**: Complex objects where averaging doesn't make sense
+
+#### 4. Most Recent
+Picks the value from the most recently updated source.
+**Used for**: Time-sensitive data
+
+#### 5. Priority-Based
+Uses predefined source priority ranking:
+```
+1 = manual, official_api (highest)
+2 = codarmory
+3 = wzstats
+4 = codmunity
+5 = computed
+```
+
+### Configuration
+
+**Environment Variables**:
+```bash
+USE_MULTI_SOURCE=true         # Enable multi-source merging
+CONFIDENCE_THRESHOLD=0.3      # Minimum confidence (0-1)
+REQUIRE_CODARMORY=true        # Require CODArmory as primary
+SKIP_STALE_SOURCES=true       # Skip data older than 30 days
+```
+
+### Usage
+
+```typescript
+import { schemaMerger } from './lib/schema/schema-merger';
+
+const mergeResult = schemaMerger.mergeWeapons(weaponId, sources);
+
+console.log(mergeResult.weapon);  // UnifiedWeapon
+console.log(mergeResult.stats);   // { sourcesProcessed, conflictsDetected, averageConfidence }
+console.log(mergeResult.errors);  // Validation errors if any
+```
+
+## Schema Versioning & Migration (Phase 2)
+
+### Schema Versions
+
+**V1 (Original - Flat Schema)**:
+- Simple flat structure: `{ name, game, category, stats: {damage, range, ...}, meta: {tier, ...} }`
+- Single source (CODArmory)
+- No lineage tracking
+
+**V2 (Lineage Metadata)**:
+- Adds `lineageMetadata` object
+- Adds `sourceMetadata` with primarySource
+- Still uses flat fields (no MultiSourceField)
+- Backward compatible with V1
+
+**V3 (Multi-Source Fields - Current)**:
+- All fields wrapped in `MultiSourceField<T>`
+- Complete lineage tracking per field
+- Conflict resolution integrated
+- Confidence scoring per field
+- Full provenance chain
+
+### Migration System
+
+**Scripts**:
+```bash
+npm run data:migrate              # Migrate all weapons to V3
+npm run data:migrate:dry-run      # Test migration without writing
+npm run data:migrate:v2           # Migrate to V2 only
+```
+
+**CLI Options**:
+- `--dry-run`: Test without database writes
+- `--target <version>`: Migrate to specific version (v2 or v3)
+- `--batch-size <size>`: Custom batch size (default 100)
+- `--continue-on-error`: Don't stop on individual errors
+- `--verbose`: Detailed logging
+
+**Features**:
+- Idempotent: Safe to run multiple times
+- Paginated: Processes in batches for memory efficiency
+- Validated: Pre and post-migration validation
+- Tracked: Records migration history in Firestore
+- Rollback: V2→V1 rollback available
+
+**Migration Path**:
+```
+V1 → V2 → V3 (automatic path calculation)
+```
+
+**Safety**:
+- Dry-run mode for testing
+- Validation before and after migration
+- Migration history tracking
+- No data loss on failure
+- Continue-on-error mode available
+
 ## Scripts
 
 ### Production Scripts
 
 | Command | Description | Frequency |
 |---------|-------------|-----------|
-| `npm run data:init` | Initial database population | Once |
+| `npm run data:init` | Initial database population (single or multi-source) | Once |
 | `npm run data:sync` | Sync weapons/attachments (upsert) | Weekly |
 | `npm run data:update` | Update meta rankings only | Daily |
 | `npm run data:cleanup` | Remove duplicate records | As needed |
 | `npm run data:health` | Check data source health | Monitoring |
 | `npm run data:test` | Test data infrastructure | Development |
+| **`npm run data:migrate`** | **Migrate weapon schemas to V3** | **After Phase 2 deployment** |
+| **`npm run data:migrate:dry-run`** | **Test migration without writes** | **Before migration** |
+| **`npm run data:migrate:v2`** | **Migrate to V2 only** | **Intermediate step** |
 
 ### Development Scripts
 
 ```bash
-# Populate database (first time)
+# Populate database (single-source mode - default)
 npm run data:init
+
+# Populate database (multi-source mode - Phase 2)
+USE_MULTI_SOURCE=true npm run data:init
 
 # Update meta rankings
 npm run data:update
 
 # Sync latest weapons (safe - uses upsert)
 npm run data:sync
+
+# Migrate schemas to V3
+npm run data:migrate:dry-run  # Test first
+npm run data:migrate          # Then migrate
 
 # Clean up duplicates from old system
 npm run data:cleanup

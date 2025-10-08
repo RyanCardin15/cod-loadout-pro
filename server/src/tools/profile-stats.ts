@@ -54,6 +54,7 @@ export async function profileStats(args: z.infer<typeof profileStatsSchema>) {
 
 export const profileStatsTool = {
   name: 'profile_stats',
+  title: 'Get Profile Stats',
   description:
     'Get detailed statistics for the current user including activity metrics, preferences, and account information. Requires authentication.',
   inputSchema: {
@@ -69,5 +70,8 @@ export const profileStatsTool = {
         },
       },
     },
+  },
+  async execute(input: unknown, context: { userId: string; sessionId: string }) {
+    return profileStats(input as z.infer<typeof profileStatsSchema>);
   },
 };

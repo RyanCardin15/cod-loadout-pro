@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
+import { logger } from '@/lib/logger';
+import { validateQuery, handleApiError } from '@/lib/utils/validation';
+import { counterQuerySchema } from '@/lib/validation/schemas';
+import { normalizeWeapon, normalizeWeapons } from '@/lib/utils/weapon-normalizer';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const weaponId = searchParams.get('weaponId');
-
-    if (!weaponId) {
-      return NextResponse.json(
-        { error: 'weaponId parameter is required' },
-        { status: 400 }
-      );
-    }
+    // Validate query parameters
+    const { weaponId, limit } = validateQuery(request, counterQuerySchema);
 
     // Get the enemy weapon
     const weaponDoc = await db().collection('weapons').doc(weaponId).get();
@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const enemyWeapon = { id: weaponDoc.id, ...weaponDoc.data() } as any;
+    const rawEnemyWeapon = { id: weaponDoc.id, ...weaponDoc.data() } as any;
+    // Normalize V3 to V1 for safe stats access
+    const enemyWeapon = normalizeWeapon(rawEnemyWeapon);
 
     // Analyze weapon strengths and weaknesses based on stats
     const strengths: string[] = [];
@@ -48,7 +50,9 @@ export async function GET(request: NextRequest) {
       .limit(50);
 
     const counterSnapshot = await counterQuery.get();
-    const allWeapons = counterSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }) as any);
+    const rawWeapons = counterSnapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }) as any);
+    // Normalize all weapons for safe stats access
+    const allWeapons = normalizeWeapons(rawWeapons);
 
     // Score each weapon as a counter
     const counterWeapons = allWeapons
@@ -98,7 +102,7 @@ export async function GET(request: NextRequest) {
       })
       .filter((w: any) => w.effectiveness >= 40 && w.weaponId !== weaponId)
       .sort((a: any, b: any) => b.effectiveness - a.effectiveness)
-      .slice(0, 5);
+      .slice(0, limit);
 
     // Generate tactical advice
     const strategies = [];
@@ -134,10 +138,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error analyzing counters:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze counters' },
-      { status: 500 }
-    );
+    logger.apiError('GET', '/api/counters', error);
+    return handleApiError(error);
   }
 }

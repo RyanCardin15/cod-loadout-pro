@@ -18,7 +18,10 @@
     "data:sync": "tsx scripts/populate-initial-data.ts",
     "data:test": "tsx scripts/test-data-infrastructure.ts",
     "data:cleanup": "tsx scripts/cleanup-duplicates.ts",
-    "data:health": "tsx scripts/health-check.ts"
+    "data:health": "tsx scripts/health-check.ts",
+    "data:migrate": "tsx scripts/migrate-weapons.ts",
+    "data:migrate:dry-run": "tsx scripts/migrate-weapons.ts -- --dry-run",
+    "data:migrate:v2": "tsx scripts/migrate-weapons.ts -- --target v2"
   },
   "workspaces": [
     "server",

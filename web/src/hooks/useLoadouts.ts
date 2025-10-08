@@ -1,52 +1,35 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
+import { logger } from '@/lib/logger';
+import type { Loadout } from '@/types';
 import { useAuth } from './useAuth';
 
-export interface Loadout {
-  id: string;
-  userId: string;
-  name: string;
-  game: string;
-  primary: {
-    weapon: {
-      id: string;
-      name: string;
-      category: string;
-      meta: {
-        tier: 'S' | 'A' | 'B' | 'C' | 'D';
-      };
-    };
-    attachments: Array<{ id: string; name: string; slot: string }>;
-  };
-  secondary?: {
-    weapon: {
-      id: string;
-      name: string;
-      category: string;
-    };
-    attachments: Array<{ id: string; name: string; slot: string }>;
-  };
-  perks: {
-    perk1?: string;
-    perk2?: string;
-    perk3?: string;
-    perk4?: string;
-  };
-  equipment: {
-    lethal?: string;
-    tactical?: string;
-    fieldUpgrade?: string;
-  };
-  playstyle: string;
-  effectiveRange: string;
-  difficulty: string;
-  overallRating?: number;
-  favorites?: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
+/**
+ * Loadouts Data Hook
+ *
+ * Fetches and manages user's loadout data from the API.
+ * Automatically loads loadouts when user is authenticated.
+ * Provides delete functionality for loadout management.
+ *
+ * @returns Object containing loadouts array, loading state, error, and delete function
+ *
+ * @example
+ * ```tsx
+ * function UserLoadouts() {
+ *   const { loadouts, loading, error, deleteLoadout } = useLoadouts();
+ *
+ *   const handleDelete = async (id: string) => {
+ *     await deleteLoadout(id);
+ *     toast.success('Loadout deleted');
+ *   };
+ *
+ *   if (loading) return <LoadingSpinner />;
+ *   return <LoadoutList loadouts={loadouts} onDelete={handleDelete} />;
+ * }
+ * ```
+ */
 export function useLoadouts() {
   const [loadouts, setLoadouts] = useState<Loadout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +57,7 @@ export function useLoadouts() {
         setLoadouts(data.loadouts || []);
         setError(null);
       } catch (err) {
-        console.error('Error fetching loadouts:', err);
+        logger.apiError('GET', '/api/loadouts', err, { userId: user?.uid });
         setError(err instanceof Error ? err : new Error('Failed to fetch loadouts'));
         setLoadouts([]);
       } finally {
@@ -97,7 +80,7 @@ export function useLoadouts() {
 
       setLoadouts(loadouts.filter((l) => l.id !== loadoutId));
     } catch (err) {
-      console.error('Error deleting loadout:', err);
+      logger.apiError('DELETE', `/api/loadouts/${loadoutId}`, err);
       throw err;
     }
   };

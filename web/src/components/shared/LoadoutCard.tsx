@@ -38,7 +38,6 @@ export function LoadoutCard({
   onEdit,
   onDelete,
   onShare,
-  onFavorite,
   showActions = true,
   className,
 }: LoadoutCardProps) {
