@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+import { InternalServerError, ServiceUnavailableError } from '@/lib/api/errors';
+import { createSuccessResponse, validateQuery } from '@/lib/api/middleware';
+import { RATE_LIMITS, withRateLimit } from '@/lib/api/rateLimit';
 import { db, FirebaseAdminError } from '@/lib/firebase/admin';
-import { validateQuery, createSuccessResponse } from '@/lib/api/middleware';
-import { withRateLimit, RATE_LIMITS } from '@/lib/api/rateLimit';
 import { weaponQuerySchema } from '@/lib/validation/schemas';
-import { ServiceUnavailableError, InternalServerError } from '@/lib/api/errors';
 import type { WeaponsResponse } from '@/types';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/weapons

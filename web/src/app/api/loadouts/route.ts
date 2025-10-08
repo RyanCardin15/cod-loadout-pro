@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { db, FirebaseAdminError } from '@/lib/firebase/admin';
-import { validateQuery, validateBody, handleApiError } from '@/lib/utils/validation';
-import { loadoutQuerySchema, createLoadoutSchema } from '@/lib/validations/loadout.schema';
-import type { LoadoutsResponse, LoadoutResponse } from '@/types';
+import { validateLoadoutAttachments } from '@/lib/firebase/attachments';
+import { validateLoadoutWeapons } from '@/lib/firebase/weapons';
+import { logger } from '@/lib/logger';
+import { detectXSSInObject, sanitizeLoadout } from '@/lib/security/sanitize';
+import { handleApiError, validateBody, validateQuery } from '@/lib/utils/validation';
+import {
+  createLoadoutInputSchema as createLoadoutSchema,
+  loadoutQuerySchema,
+} from '@/lib/validation/schemas';
+import type { LoadoutResponse, LoadoutsResponse } from '@/types';
+
+// Force dynamic rendering to prevent static generation during build
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/loadouts
@@ -67,8 +77,46 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validatedData = await validateBody(request, createLoadoutSchema);
 
+    // Detect XSS attempts for logging
+    const xssDetection = detectXSSInObject(validatedData);
+    if (xssDetection.detected) {
+      logger.apiError('POST', '/api/loadouts', {
+        message: 'XSS attempt detected',
+        fields: xssDetection.fields,
+      });
+    }
+
+    // Sanitize all user input
+    const sanitizedData = sanitizeLoadout(validatedData);
+
+    // Validate weapon references exist in database
+    const weaponValidation = await validateLoadoutWeapons(sanitizedData);
+    if (!weaponValidation.valid) {
+      return NextResponse.json(
+        {
+          error: 'Invalid weapon references',
+          details: `The following weapon IDs do not exist: ${weaponValidation.invalidIds.join(', ')}`,
+          invalidWeapons: weaponValidation.invalidIds,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate attachment references exist in database
+    const attachmentValidation = await validateLoadoutAttachments(sanitizedData);
+    if (!attachmentValidation.valid) {
+      return NextResponse.json(
+        {
+          error: 'Invalid attachment references',
+          details: `The following attachment IDs do not exist: ${attachmentValidation.invalidIds.join(', ')}`,
+          invalidAttachments: attachmentValidation.invalidIds,
+        },
+        { status: 400 }
+      );
+    }
+
     const loadoutData = {
-      ...validatedData,
+      ...sanitizedData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       favorites: 0,
