@@ -8,7 +8,7 @@ import {
   ReadResourceRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { initializeFirebase } from '../server/src/firebase/admin.js';
+import { initializeFirebase, auth } from '../server/src/firebase/admin.js';
 import { toolRegistry } from '../server/src/tools/registry.js';
 import { listWidgetResources, getWidgetTemplate } from '../server/src/resources/templates.js';
 
@@ -61,8 +61,9 @@ class VercelMCPHandler {
       }
 
       try {
+        // Get userId from the handler context (passed from the main handler)
         const context = {
-          userId: request.meta?.userId || 'anonymous',
+          userId: (this as any).userId || request.meta?.userId || 'anonymous',
           sessionId: request.meta?.sessionId || 'default',
         };
 
@@ -175,7 +176,7 @@ class VercelMCPHandler {
 
       try {
         const context = {
-          userId: request.meta?.userId || 'anonymous',
+          userId: userId || request.meta?.userId || 'anonymous',
           sessionId: request.meta?.sessionId || 'default',
         };
 
@@ -262,6 +263,28 @@ class VercelMCPHandler {
 
 const mcpHandler = new VercelMCPHandler();
 
+/**
+ * Extract user ID from Authorization header
+ */
+async function extractUserId(req: VercelRequest): Promise<string | null> {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.substring(7);
+
+  try {
+    // Verify Firebase token
+    const decodedToken = await auth().verifyIdToken(token);
+    return decodedToken.uid;
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return null;
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -272,16 +295,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
+  // Extract user ID from token for authenticated requests
+  const userId = await extractUserId(req);
+
   if (req.method === 'GET') {
-    // Health check / server info
+    // Health check / server info with OAuth discovery
+    const baseUrl = `https://${req.headers.host}`;
+
     return res.status(200).json({
       name: 'counterplay',
       version: '1.0.0',
-      description: 'Counterplay MCP Server',
+      description: 'Counterplay MCP Server - Expert Call of Duty weapon loadouts, counters, and meta analysis',
       capabilities: {
         tools: {},
         resources: {},
-      }
+      },
+      // OAuth discovery for ChatGPT
+      oauth: {
+        authorization_endpoint: `${baseUrl}/api/oauth/authorize`,
+        token_endpoint: `${baseUrl}/api/oauth/token`,
+        revocation_endpoint: `${baseUrl}/api/oauth/revoke`,
+        registration_endpoint: `${baseUrl}/api/oauth/register`,
+        introspection_endpoint: `${baseUrl}/api/oauth/introspect`,
+        issuer: baseUrl,
+        scopes_supported: ['read', 'write', 'profile'],
+        response_types_supported: ['code'],
+        grant_types_supported: ['authorization_code', 'refresh_token'],
+        code_challenge_methods_supported: ['S256'],
+        token_endpoint_auth_methods_supported: ['none'],
+      },
+      // Alternative: point to well-known OAuth discovery
+      oauth_configuration_url: `${baseUrl}/api/oauth/.well-known/oauth-authorization-server`,
     });
   }
 
