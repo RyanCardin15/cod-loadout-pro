@@ -1,8 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Gamepad2, Crosshair, Zap, Bomb, BarChart3 } from 'lucide-react';
 import { LoadoutData, BaseWidgetProps } from './types';
+import { LoadoutCardSkeleton } from '@/components/shared/SkeletonLoader';
+import { ErrorCard } from '@/components/shared/ErrorCard';
+import { StatTooltip, AttachmentTooltip } from '@/components/shared/Tooltip';
+import { CopyWeaponButton } from '@/components/shared/CopyButton';
 
 const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => {
   const [loadout, setLoadout] = useState<LoadoutData['loadout'] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const openai = (window as any).openai;
@@ -11,6 +18,7 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
 
     if (data?.loadout) {
       setLoadout(data.loadout);
+      setIsLoading(false);
     }
   }, [toolOutput]);
 
@@ -26,44 +34,113 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
     return '●'.repeat(level) + '○'.repeat(5 - level);
   };
 
-  const getStatBar = (value: number, label: string, maxWidth: boolean = false) => {
+  const getStatBar = (value: number, label: string, description?: string) => {
     const percentage = Math.min(value, 100);
     return (
-      <div className={maxWidth ? '' : 'flex-1'}>
-        <div className="flex justify-between text-xs mb-1.5">
-          <span className="text-gray-400 uppercase tracking-wide font-medium">{label}</span>
-          <span className="text-cod-orange font-bold">{value}</span>
+      <StatTooltip label={label} value={value} description={description}>
+        <div className="cursor-help">
+          <div className="flex justify-between text-xs mb-1.5">
+            <span className="text-gray-400 uppercase tracking-wide font-medium">{label}</span>
+            <span className="text-cod-orange font-bold gradient-text-premium">{value}</span>
+          </div>
+          <div className="w-full bg-gray-700 rounded-full h-2 relative overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cod-orange to-yellow-500 rounded-full relative"
+              initial={{ width: 0 }}
+              animate={{ width: `${percentage}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+            </motion.div>
+          </div>
         </div>
-        <div className="w-full bg-gray-700 rounded-full h-2">
-          <div
-            className="bg-gradient-to-r from-cod-orange to-yellow-500 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      </div>
+      </StatTooltip>
     );
   };
 
-  if (!loadout) {
+  // Enhanced loading state with skeleton
+  if (isLoading || !loadout) {
+    return <LoadoutCardSkeleton />;
+  }
+
+  // Enhanced error states using ErrorCard
+  if (loadout.isEmpty && loadout.errorState?.type === 'WEAPON_NOT_FOUND') {
     return (
-      <div className="bg-cod-black text-white p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-cod-gray rounded w-3/4 mb-4"></div>
-          <div className="h-32 bg-cod-gray rounded"></div>
-        </div>
+      <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
+        <motion.h1
+          className="text-3xl font-bold gradient-text-premium mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Gamepad2 className="w-8 h-8 text-cod-orange" /> LOADOUT BUILDER
+        </motion.h1>
+        <ErrorCard
+          type="WEAPON_NOT_FOUND"
+          title="Weapon Not Found"
+          message={loadout.errorState.message || 'The weapon you searched for could not be found.'}
+          suggestions={loadout.errorState.suggestions}
+        />
+      </div>
+    );
+  }
+
+  if (loadout.isEmpty && loadout.errorState?.type === 'FIREBASE_CONNECTION_ERROR') {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
+        <motion.h1
+          className="text-3xl font-bold gradient-text-premium mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Gamepad2 className="w-8 h-8 text-cod-orange" /> LOADOUT BUILDER
+        </motion.h1>
+        <ErrorCard
+          type="FIREBASE_CONNECTION_ERROR"
+          title="Connection Error"
+          message={loadout.errorState.message || 'Unable to connect to the server.'}
+          onRetry={() => window.location.reload()}
+          retryLabel="Reconnect"
+        />
+      </div>
+    );
+  }
+
+  if (loadout.isEmpty && loadout.errorState) {
+    return (
+      <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
+        <motion.h1
+          className="text-3xl font-bold gradient-text-premium mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Gamepad2 className="w-8 h-8 text-cod-orange" /> LOADOUT BUILDER
+        </motion.h1>
+        <ErrorCard
+          type="UNKNOWN_ERROR"
+          title="Something Went Wrong"
+          message={loadout.errorState.message || 'An unexpected error occurred.'}
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }
 
   return (
     <div className="bg-cod-black text-white p-6 max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 pb-4 border-b border-gray-700">
-        <h1 className="text-3xl font-bold text-cod-orange mb-2">
-          🎮 {loadout.name}
-        </h1>
+      {/* Header with gradient text */}
+      <motion.div
+        className="mb-6 pb-4 border-b border-gray-700"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold gradient-text-premium flex items-center gap-3">
+            <Gamepad2 className="w-8 h-8 text-cod-orange" /> {loadout.name}
+          </h1>
+          <CopyWeaponButton weaponName={loadout.primary.weaponName} />
+        </div>
         {loadout.difficulty && (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm mt-2">
             <span className="text-gray-400">Difficulty:</span>
             <span className="text-cod-orange font-mono text-lg tracking-wider">
               {getDifficultyStars(loadout.difficulty)}
@@ -71,13 +148,52 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
             <span className="text-gray-500">{loadout.difficulty}</span>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      {/* Primary Weapon */}
-      <div className="mb-6 bg-cod-gray border border-cod-orange/30 rounded-lg p-5">
+      {/* Partial Load Warning - using enhanced styling */}
+      {loadout.partialLoad && (
+        <motion.div
+          className="mb-6 bg-yellow-900/20 border border-yellow-500/30 rounded-lg p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3">
+            <Zap className="w-6 h-6 text-yellow-500 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-yellow-400 font-semibold mb-1">
+                Partial Data Loaded
+              </h3>
+              <p className="text-yellow-200/80 text-sm">
+                {loadout.partialLoad.reason}
+              </p>
+              {loadout.partialLoad.missingData && loadout.partialLoad.missingData.length > 0 && (
+                <p className="text-yellow-200/60 text-xs mt-2">
+                  Missing: {loadout.partialLoad.missingData.join(', ')}
+                </p>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Primary Weapon with tooltips */}
+      <motion.div
+        className="mb-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300 ripple"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        whileHover={{ scale: 1.02, y: -5 }}
+        whileTap={{ scale: 0.98 }}
+        tabIndex={0}
+        role="article"
+        aria-label={`Primary weapon: ${loadout.primary.weaponName}`}
+      >
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-700">
-          <span className="text-2xl">🔫</span>
-          <div>
+          <Crosshair className="w-6 h-6 text-cod-orange" />
+          <div className="flex-1">
             <h2 className="text-xl font-bold text-white">
               {loadout.primary.weaponName}
             </h2>
@@ -85,34 +201,60 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
           </div>
         </div>
 
-        {/* Attachments */}
-        {loadout.primary.attachments && loadout.primary.attachments.length > 0 && (
-          <div>
-            <h3 className="text-xs uppercase tracking-wide text-cod-orange font-semibold mb-3">
-              Attachments
-            </h3>
+        {/* Attachments with tooltips */}
+        <div>
+          <h3 className="text-xs uppercase tracking-wide text-cod-orange font-semibold mb-3">
+            Attachments
+          </h3>
+          {loadout.primary.attachments && loadout.primary.attachments.length > 0 ? (
             <div className="grid grid-cols-1 gap-2">
               {loadout.primary.attachments.map((attachment, index) => (
-                <div
+                <AttachmentTooltip
                   key={index}
-                  className="flex items-center gap-3 bg-cod-black/50 rounded px-3 py-2"
+                  name={attachment.name}
+                  slot={attachment.slot}
+                  effect={`Improves ${attachment.slot.toLowerCase()} performance`}
                 >
-                  <span className="text-cod-orange font-semibold text-xs uppercase w-16">
-                    {attachment.slot}
-                  </span>
-                  <span className="text-white text-sm">{attachment.name}</span>
-                </div>
+                  <motion.div
+                    className="flex items-center gap-3 bg-cod-black/50 rounded px-3 py-2 cursor-help hover:bg-cod-black/70 transition-colors"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 * index }}
+                    whileHover={{ x: 5 }}
+                    tabIndex={0}
+                    role="listitem"
+                  >
+                    <span className="text-cod-orange font-semibold text-xs uppercase w-20">
+                      {attachment.slot}
+                    </span>
+                    <span className="text-white text-sm flex-1">{attachment.name}</span>
+                  </motion.div>
+                </AttachmentTooltip>
               ))}
             </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="bg-cod-black/30 border border-gray-700 rounded-lg p-4 text-center">
+              <p className="text-gray-500 text-sm">No attachments available</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
 
       {/* Secondary Weapon */}
       {loadout.secondary && (
-        <div className="mb-6 bg-cod-gray border border-cod-orange/20 rounded-lg p-5">
+        <motion.div
+          className="mb-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange/60 transition-all duration-300 ripple"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          whileTap={{ scale: 0.98 }}
+          tabIndex={0}
+          role="article"
+          aria-label="Secondary weapon"
+        >
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-xl">🔫</span>
+            <Crosshair className="w-5 h-5 text-cod-orange" />
             <div>
               <h2 className="text-lg font-bold text-white">
                 {loadout.secondary.weaponName}
@@ -132,17 +274,26 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
-      {/* Perks & Equipment */}
+      {/* Perks & Equipment - keyboard navigable */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Perks */}
-        {loadout.perks && Object.keys(loadout.perks).length > 0 && (
-          <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
-            <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
-              <span>⚡</span> Perks
-            </h3>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-purple-500/60 transition-all duration-300 ripple focus-ring"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.25 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          whileTap={{ scale: 0.98 }}
+          tabIndex={0}
+          role="article"
+          aria-label="Perks"
+        >
+          <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4" /> Perks
+          </h3>
+          {loadout.perks && Object.keys(loadout.perks).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(loadout.perks).map(([slot, perk], index) => (
                 <div key={index} className="flex items-start gap-2">
@@ -153,15 +304,28 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-cod-black/30 border border-gray-700 rounded-lg p-4 text-center">
+              <p className="text-gray-500 text-sm">No perks configured</p>
+            </div>
+          )}
+        </motion.div>
 
-        {/* Equipment */}
-        {loadout.equipment && Object.keys(loadout.equipment).length > 0 && (
-          <div className="bg-cod-gray border border-cod-orange/20 rounded-lg p-4">
-            <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
-              <span>💣</span> Equipment
-            </h3>
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-red-500/60 transition-all duration-300 ripple focus-ring"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          whileTap={{ scale: 0.98 }}
+          tabIndex={0}
+          role="article"
+          aria-label="Equipment"
+        >
+          <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-3 flex items-center gap-2">
+            <Bomb className="w-4 h-4" /> Equipment
+          </h3>
+          {loadout.equipment && Object.keys(loadout.equipment).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(loadout.equipment).map(([slot, item], index) => (
                 <div key={index} className="flex items-start gap-2">
@@ -172,45 +336,60 @@ const LoadoutCard: React.FC<BaseWidgetProps<LoadoutData>> = ({ toolOutput }) => 
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-cod-black/30 border border-gray-700 rounded-lg p-4 text-center">
+              <p className="text-gray-500 text-sm">No equipment configured</p>
+            </div>
+          )}
+        </motion.div>
       </div>
 
-      {/* Final Stats */}
+      {/* Final Stats with gradient text and tooltips */}
       {loadout.stats && (
-        <div className="bg-cod-gray border border-cod-orange/30 rounded-lg p-5">
-          <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-4 flex items-center gap-2">
-            <span>📊</span> Final Stats
+        <motion.div
+          className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          role="region"
+          aria-label="Final stats"
+        >
+          <h3 className="text-sm uppercase tracking-wide gradient-text-premium font-semibold mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-cod-orange" /> Final Stats
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            {getStatBar(loadout.stats.mobility, 'Mobility', true)}
-            {getStatBar(loadout.stats.control, 'Control', true)}
-            {getStatBar(loadout.stats.range, 'Range', true)}
-            {getStatBar(loadout.stats.damage, 'Damage', true)}
+            {getStatBar(loadout.stats.mobility, 'Mobility', 'Movement speed and agility')}
+            {getStatBar(loadout.stats.control, 'Control', 'Recoil control and accuracy')}
+            {getStatBar(loadout.stats.range, 'Range', 'Effective damage range')}
+            {getStatBar(loadout.stats.damage, 'Damage', 'Damage output per shot')}
           </div>
 
-          {/* Additional Info */}
           {(loadout.effectiveRange || loadout.difficulty) && (
             <div className="mt-4 pt-4 border-t border-gray-700 flex flex-wrap gap-4 text-sm">
               {loadout.effectiveRange && (
                 <div>
                   <span className="text-gray-400">Effective Range:</span>
-                  <span className="text-white ml-2 font-semibold">
+                  <span className="text-white ml-2 font-semibold gradient-text-premium">
                     {loadout.effectiveRange}
                   </span>
                 </div>
               )}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Footer */}
-      <div className="mt-6 p-3 bg-cod-gray/50 border border-cod-orange/10 rounded-lg">
-        <p className="text-xs text-gray-400 text-center">
-          💡 Optimized for competitive play • Adjust to your playstyle
+      <motion.div
+        className="mt-6 p-3 bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-xl border border-white/10 shadow-xl rounded-lg"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-2">
+          <Zap className="w-3 h-3" /> Optimized for competitive play • Adjust to your playstyle
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };

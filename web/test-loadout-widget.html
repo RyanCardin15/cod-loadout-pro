@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoadoutCard Widget Visual Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'cod-orange': '#FF6B35',
+            'cod-gray': '#2C2C2C',
+            'cod-black': '#1A1A1A'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: #0a0a0a;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .test-section {
+      margin: 40px auto;
+      max-width: 1200px;
+      padding: 20px;
+    }
+    .test-header {
+      background: #1a1a1a;
+      color: #FF6B35;
+      padding: 15px 20px;
+      border-left: 4px solid #FF6B35;
+      margin-bottom: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-white text-center mb-8">
+      LoadoutCard Widget Visual Tests
+    </h1>
+
+    <!-- Test 1: Empty State - Weapon Not Found -->
+    <div class="test-section">
+      <div class="test-header">TEST 1: Empty State - Weapon Not Found</div>
+      <div id="test1"></div>
+    </div>
+
+    <!-- Test 2: Empty State - Firebase Connection Error -->
+    <div class="test-section">
+      <div class="test-header">TEST 2: Empty State - Firebase Connection Error</div>
+      <div id="test2"></div>
+    </div>
+
+    <!-- Test 3: Empty State - Unknown Error -->
+    <div class="test-section">
+      <div class="test-header">TEST 3: Empty State - Unknown Error</div>
+      <div id="test3"></div>
+    </div>
+
+    <!-- Test 4: Partial Load Warning -->
+    <div class="test-section">
+      <div class="test-header">TEST 4: Partial Load - Missing Attachments Warning</div>
+      <div id="test4"></div>
+    </div>
+
+    <!-- Test 5: Full Success State (Regression Test) -->
+    <div class="test-section">
+      <div class="test-header">TEST 5: Full Success State (Regression Test)</div>
+      <div id="test5"></div>
+    </div>
+  </div>
+
+  <!-- Load React and ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Load the UMD bundle -->
+  <script src="dist/counterplay-components.umd.js"></script>
+
+  <script>
+    // Test data for different scenarios
+    const test1Data = {
+      loadout: {
+        name: 'Loadout Error',
+        primary: {
+          weaponName: 'FakeGun123',
+          weaponId: '',
+          category: '',
+          attachments: []
+        },
+        secondary: null,
+        perks: {},
+        equipment: {},
+        stats: { damage: 0, range: 0, mobility: 0, control: 0 },
+        isEmpty: true,
+        errorState: {
+          type: 'WEAPON_NOT_FOUND',
+          message: 'Weapon "FakeGun123" not found in database',
+          suggestions: ['M4A1', 'MCW', 'SVA 545', 'RAM-7', 'Holger 556']
+        }
+      }
+    };
+
+    const test2Data = {
+      loadout: {
+        name: 'Loadout Error',
+        primary: {
+          weaponName: 'MCW',
+          weaponId: '',
+          category: '',
+          attachments: []
+        },
+        secondary: null,
+        perks: {},
+        equipment: {},
+        stats: { damage: 0, range: 0, mobility: 0, control: 0 },
+        isEmpty: true,
+        errorState: {
+          type: 'FIREBASE_CONNECTION_ERROR',
+          message: 'Unable to connect to the database. Please try again later.',
+          suggestions: []
+        }
+      }
+    };
+
+    const test3Data = {
+      loadout: {
+        name: 'Loadout Error',
+        primary: {
+          weaponName: 'MCW',
+          weaponId: '',
+          category: '',
+          attachments: []
+        },
+        secondary: null,
+        perks: {},
+        equipment: {},
+        stats: { damage: 0, range: 0, mobility: 0, control: 0 },
+        isEmpty: true,
+        errorState: {
+          type: 'UNKNOWN_ERROR',
+          message: 'An unexpected error occurred while building the loadout',
+          suggestions: []
+        }
+      }
+    };
+
+    const test4Data = {
+      loadout: {
+        name: 'MCW Tactical Build',
+        primary: {
+          weaponName: 'MCW',
+          weaponId: 'mcw-001',
+          category: 'AR',
+          attachments: [
+            { id: 'att1', name: 'Tempus Predator Barrel', slot: 'Barrel' },
+            { id: 'att2', name: 'Slate Reflector', slot: 'Optic' }
+          ]
+        },
+        secondary: null,
+        perks: {
+          perk1: 'Overkill',
+          perk2: 'Sleight of Hand',
+          perk3: 'Tempered',
+          perk4: 'High Alert'
+        },
+        equipment: {
+          lethal: 'Frag Grenade',
+          tactical: 'Flash Grenade',
+          fieldUpgrade: 'Trophy System'
+        },
+        stats: { damage: 75, range: 68, mobility: 72, control: 80 },
+        effectiveRange: 'Medium',
+        difficulty: 'Medium',
+        partialLoad: {
+          missingData: ['some attachments'],
+          reason: 'Some attachment data could not be loaded from the database'
+        }
+      }
+    };
+
+    const test5Data = {
+      loadout: {
+        id: 'loadout-001',
+        name: 'MCW Aggressive Build',
+        primary: {
+          weaponName: 'MCW',
+          weaponId: 'mcw-001',
+          category: 'AR',
+          attachments: [
+            { id: 'att1', name: 'Tempus Predator Barrel', slot: 'Barrel' },
+            { id: 'att2', name: 'Slate Reflector', slot: 'Optic' },
+            { id: 'att3', name: '40 Round Mag', slot: 'Magazine' },
+            { id: 'att4', name: 'Bruen Heavy Support Grip', slot: 'Underbarrel' },
+            { id: 'att5', name: 'RB Regal Heavy Stock', slot: 'Stock' }
+          ]
+        },
+        secondary: {
+          weaponName: 'Renetti',
+          attachments: ['Akimbo', 'Extended Mag']
+        },
+        perks: {
+          perk1: 'Double Time',
+          perk2: 'Quick Fix',
+          perk3: 'Tempered',
+          perk4: 'Ghost'
+        },
+        equipment: {
+          lethal: 'Semtex',
+          tactical: 'Stun Grenade',
+          fieldUpgrade: 'Dead Silence'
+        },
+        stats: { damage: 82, range: 70, mobility: 75, control: 85 },
+        effectiveRange: 'Medium',
+        difficulty: 'Easy'
+      }
+    };
+
+    // Render all tests
+    const LoadoutCard = window.CODLoadoutComponents.LoadoutCard;
+
+    ReactDOM.render(
+      React.createElement(LoadoutCard, { toolOutput: test1Data }),
+      document.getElementById('test1')
+    );
+
+    ReactDOM.render(
+      React.createElement(LoadoutCard, { toolOutput: test2Data }),
+      document.getElementById('test2')
+    );
+
+    ReactDOM.render(
+      React.createElement(LoadoutCard, { toolOutput: test3Data }),
+      document.getElementById('test3')
+    );
+
+    ReactDOM.render(
+      React.createElement(LoadoutCard, { toolOutput: test4Data }),
+      document.getElementById('test4')
+    );
+
+    ReactDOM.render(
+      React.createElement(LoadoutCard, { toolOutput: test5Data }),
+      document.getElementById('test5')
+    );
+
+    console.log('All LoadoutCard widgets rendered successfully!');
+  </script>
+</body>
+</html>

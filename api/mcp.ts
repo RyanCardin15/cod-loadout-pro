@@ -8,7 +8,7 @@ import {
   ReadResourceRequestSchema,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { initializeFirebase } from '../server/src/firebase/admin.js';
+import { initializeFirebase, auth } from '../server/src/firebase/admin.js';
 import { toolRegistry } from '../server/src/tools/registry.js';
 import { listWidgetResources, getWidgetTemplate } from '../server/src/resources/templates.js';
 
@@ -17,6 +17,7 @@ initializeFirebase();
 
 class VercelMCPHandler {
   private server: Server;
+  private currentUserId: string | null = null;
 
   constructor() {
     this.server = new Server(
@@ -33,6 +34,10 @@ class VercelMCPHandler {
     );
 
     this.setupHandlers();
+  }
+
+  setUserId(userId: string | null) {
+    this.currentUserId = userId;
   }
 
   private setupHandlers() {
@@ -61,9 +66,11 @@ class VercelMCPHandler {
       }
 
       try {
+        // Get userId from the handler instance
+        const meta = request.params._meta as any;
         const context = {
-          userId: request.meta?.userId || 'anonymous',
-          sessionId: request.meta?.sessionId || 'default',
+          userId: this.currentUserId || (meta?.userId as string) || 'anonymous',
+          sessionId: (meta?.sessionId as string) || 'default',
         };
 
         const result = await tool.execute(args, context);
@@ -174,9 +181,10 @@ class VercelMCPHandler {
       }
 
       try {
+        const meta = request.params._meta as any;
         const context = {
-          userId: request.meta?.userId || 'anonymous',
-          sessionId: request.meta?.sessionId || 'default',
+          userId: this.currentUserId || (meta?.userId as string) || 'anonymous',
+          sessionId: (meta?.sessionId as string) || 'default',
         };
 
         const result = await tool.execute(args, context);
@@ -262,6 +270,28 @@ class VercelMCPHandler {
 
 const mcpHandler = new VercelMCPHandler();
 
+/**
+ * Extract user ID from Authorization header
+ */
+async function extractUserId(req: VercelRequest): Promise<string | null> {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.substring(7);
+
+  try {
+    // Verify Firebase token
+    const decodedToken = await auth().verifyIdToken(token);
+    return decodedToken.uid;
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return null;
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -272,16 +302,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
+  // Extract user ID from token for authenticated requests
+  const userId = await extractUserId(req);
+
   if (req.method === 'GET') {
-    // Health check / server info
+    // Health check / server info with OAuth discovery
+    const baseUrl = `https://${req.headers.host}`;
+
     return res.status(200).json({
       name: 'counterplay',
       version: '1.0.0',
-      description: 'Counterplay MCP Server',
+      description: 'Counterplay MCP Server - Expert Call of Duty weapon loadouts, counters, and meta analysis',
       capabilities: {
         tools: {},
         resources: {},
-      }
+      },
+      // OAuth discovery for ChatGPT
+      oauth: {
+        authorization_endpoint: `${baseUrl}/api/oauth-authorize`,
+        token_endpoint: `${baseUrl}/api/oauth-token`,
+        revocation_endpoint: `${baseUrl}/api/oauth-revoke`,
+        issuer: baseUrl,
+        scopes_supported: ['read', 'write', 'profile'],
+        response_types_supported: ['code'],
+        grant_types_supported: ['authorization_code', 'refresh_token'],
+        code_challenge_methods_supported: ['S256'],
+        token_endpoint_auth_methods_supported: ['none'],
+      },
+      // Alternative: point to well-known OAuth discovery
+      oauth_configuration_url: `${baseUrl}/api/oauth/.well-known/oauth-authorization-server`,
     });
   }
 
@@ -291,6 +340,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const body = typeof rawBody === 'string' && rawBody.length > 0
         ? JSON.parse(rawBody)
         : (rawBody ?? {});
+
+      // Set user ID for this request
+      mcpHandler.setUserId(userId);
 
       const result = await mcpHandler.handleRequest(body);
       return res.status(200).json(result);

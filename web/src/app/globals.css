@@ -296,7 +296,7 @@
     100% { background-position: -200% 0; }
   }
 
-  /* Ripple effect */
+  /* Enhanced Ripple effect */
   .ripple {
     position: relative;
     overflow: hidden;
@@ -310,17 +310,85 @@
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
+    background: radial-gradient(circle, rgba(255, 107, 0, 0.6) 0%, rgba(255, 107, 0, 0.2) 50%, transparent 100%);
     transform: translate(-50%, -50%);
-    animation: ripple 0.6s linear;
+    animation: ripple 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
   }
 
   @keyframes ripple {
-    to {
-      width: 100px;
-      height: 100px;
+    0% {
+      width: 0;
+      height: 0;
+      opacity: 1;
+    }
+    100% {
+      width: 200px;
+      height: 200px;
       opacity: 0;
     }
+  }
+
+  /* Manual ripple trigger for JavaScript-based ripples */
+  .ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 107, 0, 0.6) 0%, rgba(255, 107, 0, 0.2) 50%, transparent 100%);
+    transform: scale(0);
+    animation: ripple-manual 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  @keyframes ripple-manual {
+    to {
+      transform: scale(4);
+      opacity: 0;
+    }
+  }
+
+  /* Enhanced Gradient Text */
+  .gradient-text-premium {
+    @apply bg-gradient-to-r from-cod-orange via-yellow-400 to-cod-orange bg-clip-text text-transparent;
+    background-size: 200% auto;
+    animation: gradient-text-flow 3s linear infinite;
+  }
+
+  @keyframes gradient-text-flow {
+    to {
+      background-position: 200% center;
+    }
+  }
+
+  /* Tier-specific gradient text */
+  .gradient-text-tier-s {
+    @apply bg-gradient-to-r from-yellow-300 via-yellow-500 to-orange-500 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-tier-a {
+    @apply bg-gradient-to-r from-green-300 via-green-500 to-emerald-500 bg-clip-text text-transparent;
+  }
+
+  /* Numerical highlight gradients */
+  .gradient-text-ttk {
+    @apply bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-effectiveness {
+    @apply bg-gradient-to-r from-green-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent;
+  }
+
+  /* Focus styles for accessibility */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-cod-orange/50 focus:ring-offset-2 focus:ring-offset-cod-black;
+  }
+
+  .focus-ring-white {
+    @apply focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-cod-black;
+  }
+
+  /* Keyboard navigation focus */
+  [data-focused="true"] {
+    @apply ring-2 ring-cod-orange/50 ring-offset-2 ring-offset-cod-black;
   }
 }
 
@@ -345,5 +413,10 @@
 
   .hover-tilt:hover {
     transform: perspective(1000px) rotateY(5deg);
+  }
+
+  /* Shimmer animation for progress bars */
+  .animate-shimmer {
+    animation: shimmer 3s infinite;
   }
 }

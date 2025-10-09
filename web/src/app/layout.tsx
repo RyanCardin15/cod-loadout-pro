@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { Navigation } from '@/components/ui/Navigation';
 import { Toaster } from 'sonner';
+import { TooltipProvider } from '@/components/shared/Tooltip';
 import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -77,20 +78,22 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${rajdhani.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen bg-cod-black text-white antialiased scan-lines">
         <ErrorBoundary>
-          <Providers>
-            <div className="relative flex min-h-screen flex-col">
-              <Navigation />
-              <main className="flex-1">
-                {children}
-              </main>
-              <footer className="border-t border-cod-surface bg-cod-gray/50 backdrop-blur-md">
-                <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-400">
-                  <p>© 2025 Counterplay. Not affiliated with Activision or Call of Duty.</p>
-                </div>
-              </footer>
-            </div>
-            <Toaster position="top-right" theme="dark" />
-          </Providers>
+          <TooltipProvider delayDuration={200}>
+            <Providers>
+              <div className="relative flex min-h-screen flex-col">
+                <Navigation />
+                <main className="flex-1">
+                  {children}
+                </main>
+                <footer className="border-t border-cod-surface bg-cod-gray/50 backdrop-blur-md">
+                  <div className="container mx-auto px-4 py-6 text-center text-sm text-gray-400">
+                    <p>© 2025 Counterplay. Not affiliated with Activision or Call of Duty.</p>
+                  </div>
+                </footer>
+              </div>
+              <Toaster position="top-right" theme="dark" />
+            </Providers>
+          </TooltipProvider>
         </ErrorBoundary>
         <Analytics />
       </body>

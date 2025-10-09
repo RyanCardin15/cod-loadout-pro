@@ -68,16 +68,101 @@ export const counterLoadoutTool: MCPTool = {
     const params = inputSchema.parse(input);
     const counterService = new CounterService();
 
-    // Analyze enemy weapon
-    const enemyWeapon = await counterService.getWeaponByName(params.enemyWeapon);
+    let enemyWeapon;
+    let counters;
+    let errorState = null;
+    let partialData = false;
 
-    // Find best counters
-    const counters = await counterService.findCounters({
-      enemyWeapon,
-      enemyLoadout: params.enemyLoadout,
-      userPlaystyle: params.myPlaystyle,
-      game: params.game
-    });
+    // Triple-fallback try-catch wrapper
+    try {
+      console.log('[counter_loadout] Analyzing enemy weapon:', params.enemyWeapon);
+
+      // Analyze enemy weapon
+      enemyWeapon = await counterService.getWeaponByName(params.enemyWeapon, params.game);
+
+      console.log('[counter_loadout] Enemy weapon found:', enemyWeapon.name);
+
+      // Find best counters
+      counters = await counterService.findCounters({
+        enemyWeapon,
+        enemyLoadout: params.enemyLoadout,
+        userPlaystyle: params.myPlaystyle,
+        game: params.game
+      });
+
+      // Check for partial data (strategies or advice missing)
+      if (!counters.strategies || counters.strategies.length === 0 ||
+          !counters.tacticalAdvice || counters.tacticalAdvice.length === 0) {
+        console.warn('[counter_loadout] Partial data - some strategies or advice missing');
+        partialData = true;
+      }
+
+      console.log('[counter_loadout] Counter analysis complete');
+    } catch (error: any) {
+      console.error('[counter_loadout] Error analyzing enemy loadout:', error);
+
+      // Classify error and return structured empty state
+      if (error.type === 'ENEMY_WEAPON_NOT_FOUND') {
+        console.log('[counter_loadout] Enemy weapon not found, returning error state with suggestions');
+        errorState = {
+          type: 'ENEMY_WEAPON_NOT_FOUND',
+          message: error.message,
+          suggestions: error.suggestions || []
+        };
+      } else if (error.type === 'NO_COUNTERS_FOUND') {
+        console.log('[counter_loadout] No counters found');
+        errorState = {
+          type: 'NO_COUNTERS_FOUND',
+          message: error.message,
+          suggestions: []
+        };
+      } else if (error.code === 'unavailable' || error.message?.includes('Firebase') || error.type === 'FIREBASE_CONNECTION_ERROR') {
+        console.error('[counter_loadout] Firebase connection error');
+        errorState = {
+          type: 'FIREBASE_CONNECTION_ERROR',
+          message: 'Unable to connect to the database. Please try again later.',
+          suggestions: []
+        };
+      } else {
+        console.error('[counter_loadout] Unknown error:', error);
+        errorState = {
+          type: 'UNKNOWN_ERROR',
+          message: error.message || 'An unexpected error occurred while analyzing the enemy loadout',
+          suggestions: []
+        };
+      }
+
+      // Return structured empty state instead of throwing
+      return {
+        structuredContent: {
+          enemyWeapon: {
+            name: params.enemyWeapon,
+            category: '',
+            strengths: [],
+            weaknesses: []
+          },
+          counterWeapons: [],
+          strategies: [],
+          tacticalAdvice: [],
+          isEmpty: true,
+          errorState
+        },
+        content: [{
+          type: 'text',
+          text: `**Error: ${errorState.message}**\n\n` +
+                (errorState.suggestions.length > 0
+                  ? `Did you mean one of these?\n${errorState.suggestions.map((s: string) => `• ${s}`).join('\n')}`
+                  : 'Please check the weapon name and try again.')
+        }],
+        _meta: {
+          error: true,
+          errorType: errorState.type
+        }
+      };
+    }
+
+    // Get counter perks
+    const counterPerks = counterService.suggestCounterPerks(enemyWeapon);
 
     return {
       structuredContent: {
@@ -95,21 +180,26 @@ export const counterLoadoutTool: MCPTool = {
           reasoning: c.reasoning
         })),
         strategies: counters.strategies,
-        tacticalAdvice: counters.tacticalAdvice
+        tacticalAdvice: counters.tacticalAdvice,
+        threatLevel: counters.threatLevel,
+        counterPerks,
+        partialData
       },
 
       content: [{
         type: 'text',
         text: `**Countering ${enemyWeapon.name}**\n\n` +
+              `Threat Level: ${counters.threatLevel}\n\n` +
               `Top Counter: ${counters.weapons[0]?.weapon.name} (${counters.weapons[0]?.effectiveness}% effective)\n\n` +
               `${counters.weapons[0]?.reasoning}\n\n` +
-              `Key Strategies:\n${counters.strategies.map((s: string) => `• ${s}`).join('\n')}`
+              `Key Strategies:\n${counters.strategies.map((s: string) => `• ${s}`).join('\n')}` +
+              (partialData ? '\n\n⚠️ Note: Some data could not be loaded' : '')
       }],
 
       _meta: {
         allCounters: counters,
         enemyFullData: enemyWeapon,
-        perksToCounter: counterService.suggestCounterPerks(enemyWeapon)
+        perksToCounter: counterPerks
       }
     };
   }

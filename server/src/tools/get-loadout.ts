@@ -64,15 +64,93 @@ export const getLoadoutTool: MCPTool = {
     const params = inputSchema.parse(input);
     const loadoutService = new LoadoutService();
 
-    // Build optimal loadout
-    const loadout = await loadoutService.buildLoadout({
-      weaponId: params.weaponId,
-      weaponName: params.weaponName,
-      game: params.game,
-      situation: params.situation,
-      playstyle: params.playstyle,
-      userId: context.userId
-    });
+    let loadout;
+    let errorState = null;
+    let partialLoad = null;
+
+    // Triple-fallback try-catch wrapper
+    try {
+      console.log('[get_loadout] Building loadout for:', params);
+
+      // Build optimal loadout
+      loadout = await loadoutService.buildLoadout({
+        weaponId: params.weaponId,
+        weaponName: params.weaponName,
+        game: params.game,
+        situation: params.situation,
+        playstyle: params.playstyle,
+        userId: context.userId
+      });
+
+      // Check for partial load (missing attachments)
+      if ((loadout as any).hadAttachmentErrors || loadout.primary.attachments.length === 0) {
+        console.warn('[get_loadout] Partial load - some attachments could not be fetched');
+        partialLoad = {
+          missingData: loadout.primary.attachments.length === 0 ? ['attachments'] : ['some attachments'],
+          reason: 'Some attachment data could not be loaded from the database'
+        };
+      }
+
+      console.log('[get_loadout] Loadout built successfully');
+    } catch (error: any) {
+      console.error('[get_loadout] Error building loadout:', error);
+
+      // Classify error and return structured empty state
+      if (error.type === 'WEAPON_NOT_FOUND') {
+        console.log('[get_loadout] Weapon not found, returning error state with suggestions');
+        errorState = {
+          type: 'WEAPON_NOT_FOUND',
+          message: error.message,
+          suggestions: error.suggestions || []
+        };
+      } else if (error.code === 'unavailable' || error.message?.includes('Firebase')) {
+        console.error('[get_loadout] Firebase connection error');
+        errorState = {
+          type: 'FIREBASE_CONNECTION_ERROR',
+          message: 'Unable to connect to the database. Please try again later.',
+          suggestions: []
+        };
+      } else {
+        console.error('[get_loadout] Unknown error:', error);
+        errorState = {
+          type: 'UNKNOWN_ERROR',
+          message: error.message || 'An unexpected error occurred while building the loadout',
+          suggestions: []
+        };
+      }
+
+      // Return structured empty state instead of throwing
+      return {
+        structuredContent: {
+          loadout: {
+            name: 'Loadout Error',
+            primary: {
+              weaponName: params.weaponName || params.weaponId || 'Unknown',
+              weaponId: params.weaponId || '',
+              category: '',
+              attachments: []
+            },
+            secondary: null,
+            perks: {},
+            equipment: {},
+            stats: { damage: 0, range: 0, mobility: 0, control: 0 },
+            isEmpty: true,
+            errorState
+          }
+        },
+        content: [{
+          type: 'text',
+          text: `**Error: ${errorState.message}**\n\n` +
+                (errorState.suggestions.length > 0
+                  ? `Did you mean one of these?\n${errorState.suggestions.map((s: string) => `• ${s}`).join('\n')}`
+                  : 'Please check the weapon name and try again.')
+        }],
+        _meta: {
+          error: true,
+          errorType: errorState.type
+        }
+      };
+    }
 
     // Calculate overall stats
     const finalStats = loadoutService.calculateFinalStats(loadout);
@@ -100,7 +178,8 @@ export const getLoadoutTool: MCPTool = {
           equipment: loadout.equipment,
           stats: finalStats,
           effectiveRange: loadout.effectiveRange,
-          difficulty: loadout.difficulty
+          difficulty: loadout.difficulty,
+          partialLoad
         }
       },
 
@@ -110,7 +189,8 @@ export const getLoadoutTool: MCPTool = {
               `Primary: ${loadout.primary.weapon.name} (${loadout.primary.weapon.category})\n` +
               `Attachments: ${loadout.primary.attachments.map(a => a.name).join(', ')}\n\n` +
               `${loadout.description}\n\n` +
-              `Pro Tips:\n${loadout.tips?.map(t => `• ${t}`).join('\n')}`
+              `Pro Tips:\n${loadout.tips?.map(t => `• ${t}`).join('\n')}` +
+              (partialLoad ? `\n\n⚠️ Note: ${partialLoad.reason}` : '')
       }],
 
       _meta: {

@@ -30,9 +30,18 @@ export interface TierData {
   D: Weapon[];
 }
 
+export interface TopLoadout {
+  id: string;
+  name: string;
+  primaryWeapon: string;
+  secondaryWeapon?: string;
+  popularity: number;
+  winRate?: number;
+}
+
 export interface MetaTierListData {
   tiers: TierData;
-  topLoadouts?: any[];
+  topLoadouts?: TopLoadout[];
   recentChanges?: string[];
   lastUpdated?: string;
 }
@@ -45,6 +54,9 @@ export interface WeaponListData {
     category?: string;
     situation?: string;
   };
+  // Error handling fields
+  isEmpty?: boolean;
+  errorState?: ErrorState;
 }
 
 // LoadoutCard types
@@ -66,6 +78,36 @@ export interface SecondaryWeapon {
   attachments: string[];
 }
 
+// Error handling types
+export type ErrorType =
+  | 'WEAPON_NOT_FOUND'
+  | 'ENEMY_WEAPON_NOT_FOUND'
+  | 'NO_COUNTERS_FOUND'
+  | 'NO_RESULTS'
+  | 'FIREBASE_CONNECTION_ERROR'
+  | 'VALIDATION_ERROR'
+  | 'ATTACHMENT_FETCH_ERROR'
+  | 'PERK_FETCH_ERROR'
+  | 'EQUIPMENT_FETCH_ERROR'
+  | 'UNKNOWN_ERROR';
+
+export interface ErrorState {
+  type: ErrorType;
+  message: string;
+  suggestions?: string[];
+}
+
+export interface PartialLoadInfo {
+  missingData: string[];
+  reason: string;
+}
+
+export interface Suggestion {
+  weaponName: string;
+  weaponId?: string;
+  similarity?: number;
+}
+
 export interface LoadoutData {
   loadout: {
     id?: string;
@@ -77,6 +119,10 @@ export interface LoadoutData {
     stats: WeaponStats;
     effectiveRange?: string;
     difficulty?: string;
+    // Error handling fields
+    isEmpty?: boolean;
+    errorState?: ErrorState;
+    partialLoad?: PartialLoadInfo;
   };
 }
 
@@ -101,6 +147,12 @@ export interface CounterSuggestionsData {
   counterWeapons: CounterWeapon[];
   strategies: string[];
   tacticalAdvice: string[];
+  counterPerks?: string[];
+  threatLevel?: string;
+  // Error handling fields
+  isEmpty?: boolean;
+  errorState?: ErrorState;
+  partialData?: boolean;
 }
 
 // MyLoadouts types

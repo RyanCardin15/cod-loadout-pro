@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Target, Ruler, TrendingUp, Crosshair, Settings, Lightbulb } from 'lucide-react';
 import { PlaystyleData, BaseWidgetProps } from './types';
+import { LoadoutCardSkeleton } from '@/components/shared/SkeletonLoader';
+import { Tooltip } from '@/components/shared/Tooltip';
+import { CopyWeaponButton } from '@/components/shared/CopyButton';
 
 const PlaystyleProfile: React.FC<BaseWidgetProps<PlaystyleData>> = ({ toolOutput }) => {
   const [data, setData] = useState<PlaystyleData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const openai = (window as any).openai;
@@ -11,6 +17,7 @@ const PlaystyleProfile: React.FC<BaseWidgetProps<PlaystyleData>> = ({ toolOutput
 
     if (extractedData?.playstyle) {
       setData(extractedData);
+      setIsLoading(false);
     }
   }, [toolOutput]);
 
@@ -20,150 +27,250 @@ const PlaystyleProfile: React.FC<BaseWidgetProps<PlaystyleData>> = ({ toolOutput
     return 'from-blue-500 to-cyan-500';
   };
 
-  if (!data) {
-    return (
-      <div className="bg-cod-black text-white p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-cod-gray rounded w-3/4 mb-4"></div>
-          <div className="h-32 bg-cod-gray rounded"></div>
-        </div>
-      </div>
-    );
+  // Enhanced loading state with skeleton
+  if (isLoading || !data) {
+    return <LoadoutCardSkeleton />;
   }
 
   const { playstyle } = data;
 
   return (
     <div className="bg-cod-black text-white p-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 pb-4 border-b border-gray-700">
-        <h1 className="text-3xl font-bold text-cod-orange mb-2">
-          🎯 YOUR PLAYSTYLE: {playstyle.primary.toUpperCase()}
+      {/* Header with gradient text */}
+      <motion.div
+        className="mb-6 pb-4 border-b border-gray-700"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="text-3xl font-bold gradient-text-premium mb-2 flex items-center gap-3">
+          <Target className="w-8 h-8 text-cod-orange" /> YOUR PLAYSTYLE: {playstyle.primary.toUpperCase()}
         </h1>
         {playstyle.pacing && (
           <p className="text-gray-400">Pacing: {playstyle.pacing}</p>
         )}
-      </div>
+      </motion.div>
 
-      {/* Engagement Ranges */}
-      <div className="mb-6 bg-cod-gray border border-cod-orange/30 rounded-lg p-5">
-        <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-4 flex items-center gap-2">
-          <span>📏</span> ENGAGEMENT RANGES
+      {/* Engagement Ranges with tooltips */}
+      <motion.div
+        className="mb-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300 ripple"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        whileTap={{ scale: 0.98 }}
+        tabIndex={0}
+        role="region"
+        aria-label="Engagement ranges"
+      >
+        <h3 className="text-sm uppercase tracking-wide gradient-text-premium font-semibold mb-4 flex items-center gap-2">
+          <Ruler className="w-4 h-4 text-cod-orange" /> ENGAGEMENT RANGES
         </h3>
         <div className="space-y-4">
-          {/* Close Range */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-300 font-medium">Close Range</span>
-              <span className="text-cod-orange font-bold">{playstyle.ranges.close}%</span>
+          {/* Close Range with tooltip */}
+          <Tooltip
+            content={
+              <div>
+                <div className="font-semibold mb-1">Close Range: {playstyle.ranges.close}%</div>
+                <div className="text-xs">0-15m effective combat distance. Best for aggressive rushers.</div>
+              </div>
+            }
+          >
+            <div className="cursor-help">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-300 font-medium">Close Range</span>
+                <span className="text-cod-orange font-bold gradient-text-premium">{playstyle.ranges.close}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
+                <motion.div
+                  className={`h-full bg-gradient-to-r ${getGradientForRange(playstyle.ranges.close)} rounded-full relative`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${playstyle.ranges.close}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                </motion.div>
+              </div>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-3">
-              <div
-                className={`bg-gradient-to-r ${getGradientForRange(playstyle.ranges.close)} h-3 rounded-full transition-all duration-500`}
-                style={{ width: `${playstyle.ranges.close}%` }}
-              />
-            </div>
-          </div>
+          </Tooltip>
 
-          {/* Medium Range */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-300 font-medium">Medium Range</span>
-              <span className="text-cod-orange font-bold">{playstyle.ranges.medium}%</span>
+          {/* Medium Range with tooltip */}
+          <Tooltip
+            content={
+              <div>
+                <div className="font-semibold mb-1">Medium Range: {playstyle.ranges.medium}%</div>
+                <div className="text-xs">15-30m effective combat distance. Best for balanced play.</div>
+              </div>
+            }
+          >
+            <div className="cursor-help">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-300 font-medium">Medium Range</span>
+                <span className="text-cod-orange font-bold gradient-text-premium">{playstyle.ranges.medium}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
+                <motion.div
+                  className={`h-full bg-gradient-to-r ${getGradientForRange(playstyle.ranges.medium)} rounded-full relative`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${playstyle.ranges.medium}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                </motion.div>
+              </div>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-3">
-              <div
-                className={`bg-gradient-to-r ${getGradientForRange(playstyle.ranges.medium)} h-3 rounded-full transition-all duration-500`}
-                style={{ width: `${playstyle.ranges.medium}%` }}
-              />
-            </div>
-          </div>
+          </Tooltip>
 
-          {/* Long Range */}
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-300 font-medium">Long Range</span>
-              <span className="text-cod-orange font-bold">{playstyle.ranges.long}%</span>
+          {/* Long Range with tooltip */}
+          <Tooltip
+            content={
+              <div>
+                <div className="font-semibold mb-1">Long Range: {playstyle.ranges.long}%</div>
+                <div className="text-xs">30m+ effective combat distance. Best for tactical snipers.</div>
+              </div>
+            }
+          >
+            <div className="cursor-help">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-300 font-medium">Long Range</span>
+                <span className="text-cod-orange font-bold gradient-text-premium">{playstyle.ranges.long}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-3 relative overflow-hidden">
+                <motion.div
+                  className={`h-full bg-gradient-to-r ${getGradientForRange(playstyle.ranges.long)} rounded-full relative`}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${playstyle.ranges.long}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                </motion.div>
+              </div>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-3">
-              <div
-                className={`bg-gradient-to-r ${getGradientForRange(playstyle.ranges.long)} h-3 rounded-full transition-all duration-500`}
-                style={{ width: `${playstyle.ranges.long}%` }}
-              />
-            </div>
-          </div>
+          </Tooltip>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Strengths */}
+      {/* Strengths with enhanced interactions */}
       {playstyle.strengths && playstyle.strengths.length > 0 && (
-        <div className="mb-6 bg-green-900/20 border border-green-500/30 rounded-lg p-5">
-          <h3 className="text-sm uppercase tracking-wide font-semibold mb-4 flex items-center gap-2 text-green-400">
-            <span>💪</span> YOUR STRENGTHS
+        <motion.div
+          className="mb-6 bg-gradient-to-br from-green-900/20 to-green-900/10 backdrop-blur-xl border border-green-500/30 shadow-xl rounded-xl p-6 hover:border-green-500/60 transition-all duration-300 ripple"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          whileTap={{ scale: 0.98 }}
+          tabIndex={0}
+          role="article"
+          aria-label="Your strengths"
+        >
+          <h3 className="text-sm uppercase tracking-wide font-semibold mb-4 flex items-center gap-2 text-green-400 gradient-text-a-tier">
+            <TrendingUp className="w-4 h-4" /> YOUR STRENGTHS
           </h3>
           <ul className="space-y-2">
             {playstyle.strengths.map((strength, index) => (
-              <li key={index} className="flex items-start gap-2">
+              <motion.li
+                key={index}
+                className="flex items-start gap-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * index }}
+              >
                 <span className="text-green-400 mt-0.5">•</span>
                 <span className="text-gray-300">{strength}</span>
-              </li>
+              </motion.li>
             ))}
           </ul>
-        </div>
+        </motion.div>
       )}
 
-      {/* Recommended Weapons */}
+      {/* Recommended Weapons with copy buttons */}
       {playstyle.recommendedWeapons && playstyle.recommendedWeapons.length > 0 && (
-        <div className="mb-6 bg-cod-gray border border-cod-orange/30 rounded-lg p-5">
-          <h3 className="text-sm uppercase tracking-wide text-cod-orange font-semibold mb-4 flex items-center gap-2">
-            <span>🔫</span> RECOMMENDED WEAPONS
+        <motion.div
+          className="mb-6 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-xl p-6 hover:border-cod-orange transition-all duration-300 ripple"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileTap={{ scale: 0.98 }}
+          tabIndex={0}
+          role="region"
+          aria-label="Recommended weapons"
+        >
+          <h3 className="text-sm uppercase tracking-wide gradient-text-premium font-semibold mb-4 flex items-center gap-2">
+            <Crosshair className="w-4 h-4 text-cod-orange" /> RECOMMENDED WEAPONS
           </h3>
           <div className="space-y-2">
             {playstyle.recommendedWeapons.map((weapon, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="flex items-center gap-3 bg-cod-black/50 rounded px-4 py-3 hover:bg-cod-black/70 transition-colors"
+                className="flex items-center gap-3 bg-cod-black/50 rounded px-4 py-3 hover:bg-cod-black/70 transition-colors group"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.05 * index }}
+                whileHover={{ x: 5 }}
+                tabIndex={0}
+                role="listitem"
               >
-                <span className="text-cod-orange font-bold text-lg w-8">
+                <span className="text-cod-orange font-bold text-lg w-8 gradient-text-premium">
                   {index + 1}.
                 </span>
-                <span className="text-white font-semibold">{weapon}</span>
+                <span className="text-white font-semibold flex-1">{weapon}</span>
+                <CopyWeaponButton weaponName={weapon} />
                 {index === 0 && (
-                  <span className="ml-auto px-2 py-1 bg-cod-orange/20 text-cod-orange text-xs font-bold rounded">
+                  <span className="ml-auto px-2 py-1 bg-cod-orange/20 text-cod-orange text-xs font-bold rounded gradient-text-s-tier">
                     BEST FOR YOU
                   </span>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Recommended Perks */}
+      {/* Recommended Perks with enhanced interactions */}
       {playstyle.recommendedPerks && playstyle.recommendedPerks.length > 0 && (
-        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-5">
+        <motion.div
+          className="bg-gradient-to-br from-blue-900/20 to-blue-900/10 backdrop-blur-xl border border-blue-500/30 shadow-xl rounded-xl p-6 hover:border-blue-500/60 transition-all duration-300 ripple"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          whileHover={{ scale: 1.02, y: -5 }}
+          whileTap={{ scale: 0.98 }}
+          tabIndex={0}
+          role="article"
+          aria-label="Recommended perks"
+        >
           <h3 className="text-sm uppercase tracking-wide font-semibold mb-4 flex items-center gap-2 text-blue-400">
-            <span>⚙️</span> RECOMMENDED PERKS
+            <Settings className="w-4 h-4" /> RECOMMENDED PERKS
           </h3>
           <div className="flex flex-wrap gap-2">
             {playstyle.recommendedPerks.map((perk, index) => (
-              <span
+              <motion.span
                 key={index}
-                className="px-3 py-2 bg-blue-900/30 border border-blue-500/30 rounded text-sm text-blue-200 font-medium"
+                className="px-3 py-2 bg-blue-900/30 border border-blue-500/30 rounded text-sm text-blue-200 font-medium hover:bg-blue-900/50 transition-colors cursor-pointer"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.05 * index }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                tabIndex={0}
+                role="button"
               >
                 {perk}
-              </span>
+              </motion.span>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Footer Note */}
-      <div className="mt-6 p-4 bg-cod-gray/50 border border-cod-orange/20 rounded-lg">
-        <p className="text-xs text-gray-400 text-center">
-          💡 Profile based on your preferences and play patterns
+      <motion.div
+        className="mt-6 p-4 bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-xl border border-white/10 shadow-xl rounded-lg"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
+        <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-2">
+          <Lightbulb className="w-3 h-3 text-cod-orange" /> Profile based on your preferences and play patterns
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };
